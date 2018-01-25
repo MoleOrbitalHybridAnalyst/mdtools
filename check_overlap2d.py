@@ -30,7 +30,9 @@ if __name__=="__main__":
 
     plt.figure()
 
+    cmap = plt.cm.get_cmap('hsv', 20)
     with open(args.list_dir,"r") as fp:
+        idir = 0
         for line in fp:
             cv1=[]; cv2=[]
             print("checking "+line, end="")
@@ -55,14 +57,17 @@ if __name__=="__main__":
             # w2 = (max2 - min2) / n2
             n1 = int((max1 - min1) / w1)
             n2 = int((max2 - min2) / w2)
-            histo = np.zeros(n1*n2).reshape(n2,n1)
+            print("min1 = %f max1 = %f min2 = %f max2 = %f"%(min1,max1,min2,max2))
+            print("n1 = %d n2 = %d"%(n1,n2))
+            histo = np.zeros((n1+1)*(n2+1)).reshape(n2+1,n1+1)
             for (x,y) in zip(cv1,cv2):
                 histo[int((y-min2)/w2)][int((x-min1)/w1)] += 1
             histo /= len(cv1)
-            x = np.arange(min1,max1+w1,w1)[:n1] + w1/2.0
-            y = np.arange(min2,max2+w2,w2)[:n2] + w2/2.0
-            cp = plt.contour(x,y,histo,[drawline])
+            x = np.arange(min1,max1+w1,w1)[:n1+1] + w1/2.0
+            y = np.arange(min2,max2+w2,w2)[:n2+1] + w2/2.0
+            cp = plt.contour(x,y,histo,[drawline],colors=[cmap(idir)])
             cp.levels = [line.rstrip()]
             plt.clabel(cp, cp.levels)
+            idir = (idir + 1) % 20
 
     plt.show()
