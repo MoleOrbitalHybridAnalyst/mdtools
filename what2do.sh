@@ -18,7 +18,7 @@ do
    then
       if [ ! -e $i/COLVAR ]
       then
-         echo "echo \"run $i\""
+         echo "sh sdo.sh $i"
          continue
       fi
    else
@@ -35,7 +35,16 @@ do
       # check whether inputs are prepared in the next step dir
       if [ -e restart ]
       then
-         printf "echo \"run $test_dir\"; "
+         tmp=`squeue -u chhli -n $test_dir|wc -l`
+         if [  $tmp -eq 1 ]
+         then
+            printf "sh sdo.sh $test_dir; "
+         else
+            if [ $tmp -gt 2 ]
+            then
+               echo "more than 1 $test_dir!!!!"
+            fi
+         fi
       else
          printf "sh copy_restart.sh $max_dir $test_dir; "
       fi
@@ -49,7 +58,16 @@ do
       cd $test_dir
       if [ -e restart ]
       then
-         printf "echo \"run $test_dir\"; "
+         tmp=`squeue -u chhli -n $test_dir|wc -l`
+         if [ $tmp -eq 1 ]
+         then
+            printf "sh sdo.sh $test_dir; "
+         else
+            if [ $tmp -gt 2 ]
+            then
+               echo "more than 1 $test_dir!!!!"
+            fi
+         fi
       else
          printf "sh copy_restart.sh $min_dir $test_dir; "
       fi

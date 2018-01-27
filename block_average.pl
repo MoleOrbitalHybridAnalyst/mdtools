@@ -36,5 +36,5 @@ for my $id (0..($nblocks-1)) {
       $i ++;
    }
    close OUT;
-   system "wham $histo_min $histo_max $nbins 1e-10 310 0 metadatafile${id} pmf${id}.dat > wham${id}.log";
+   system "wham $histo_min $histo_max $nbins 1e-11 310 0 metadatafile${id} pmf${id}.dat > wham${id}.log";
 }
