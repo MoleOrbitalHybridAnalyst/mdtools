@@ -40,9 +40,9 @@ def relative_entropy(dist1, dist2, epsilon):
         if x < 1e-100:
             continue
         if y < 1e-100:
-            result -= x * np.log(y+epsilon)
+            result += x * np.log(x/(y+epsilon))
             continue
-        result -= x * np.log(y)
+        result += x * np.log(x/y)
     return result
 
 if __name__=="__main__":
@@ -52,7 +52,7 @@ if __name__=="__main__":
     parser.add_argument('-c','--column',
             help='column numbers of cv in file1 and file2',default="1,1")
     parser.add_argument('-w','--width',
-            help='width of bins in when doing histogram',default=0.025)
+            help='width of bins when doing histogram',default=0.025)
     parser.add_argument('-r','--ratio',
             help='extend the histo range by this ratio of true range',
             default=0.2)
