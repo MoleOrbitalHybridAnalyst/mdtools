@@ -62,7 +62,13 @@ int main(int argc,char **argv) {
    /*--- read pdb and pdbdef ---*/
    PDB pdb(fvalue);
    PDBDef def(dvalue);
-   auto cen = pdb.geoCenter(def);
+   Vector cen;
+   try {
+      cen = pdb.geoCenter(def);
+   } catch(const std::invalid_argument& e) {
+      cerr << "no atoms selected with given def\n";
+      return 1;
+   }
    auto sel = pdb.selectAtoms(def);
    cout << "atom selection: ";
    for(auto i : sel) {
@@ -73,4 +79,6 @@ int main(int argc,char **argv) {
    pdb.shiftToMiddle(def);
    //pdb.shiftToMiddle(sel);
    pdb.write2file(ovalue);
+
+   return 0;
 }
