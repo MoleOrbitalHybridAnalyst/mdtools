@@ -62,6 +62,9 @@ int main(int argc,char **argv) {
    /*--- read pdb and pdbdef ---*/
    PDB pdb(fvalue);
    PDBDef def(dvalue);
+   if(def.empty()) {
+      cerr << "empty def\n"; return 1;
+   }
    Vector cen;
    try {
       cen = pdb.geoCenter(def);
@@ -71,8 +74,16 @@ int main(int argc,char **argv) {
    }
    auto sel = pdb.selectAtoms(def);
    cout << "atom selection: ";
-   for(auto i : sel) {
-      cout << i << ' ';
+   if(sel.size() <= 20) 
+      for(auto i : sel) {
+         cout << i << ' ';
+      }
+   else {
+      for(size_t i = 0; i < 10; ++i)
+         cout << sel[i] << ' ';
+      cout << "\n                ......\n                ";
+      for(size_t i = sel.size()-10; i < sel.size(); ++i)
+         cout << sel[i] << ' ';
    }
    cout << endl << "original center: ";
    cout << cen[0] << ' ' << cen[1] << ' ' << cen[2] << endl;
