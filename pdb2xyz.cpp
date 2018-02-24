@@ -15,7 +15,7 @@ int main(int argc, char **argv)
 {
    PDB pdb(argv[1]);
 
-   pdb.writeIndexFile(argv[2],"system");
+   pdb.writeXYZ(argv[2],"system");
 
    return 0;
 
