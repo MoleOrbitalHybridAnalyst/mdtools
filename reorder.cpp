@@ -130,6 +130,8 @@ int main(int argc,char **argv) {
    pdb.reorderWater(guess, true, assemble, defo, defh, defhyd);
    pdb.write2file(ovalue);
 
+   defhyd.print();
+
    //fprintf(fp_c, "%zu\n", center);
    //if(cvalue) fclose(fp_c);
 }

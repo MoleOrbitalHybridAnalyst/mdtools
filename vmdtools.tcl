@@ -50,3 +50,15 @@ proc geo_center {select} {
    }
    return $com
 }
+
+proc draw_path {mol path_file {color orange} {radius 0.2} {resolution 10}} {
+   set fp [open $path_file r]
+   set path_filedat [read $fp]
+   close $fp
+   graphics $mol color $color
+   set path_dat [split $path_filedat "\n"]
+   foreach line $path_dat {
+      set splits [split $line]
+      graphics $mol sphere [list [lindex $splits 0] [lindex $splits 1] [lindex $splits 2]] radius $radius resolution $resolution
+   }
+}
