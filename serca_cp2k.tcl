@@ -13,7 +13,7 @@ mol modselect 3 0 resname H3O or same residue as (name OH2 and ((within 7 of (re
 mol modstyle 3 0 DynamicBonds
 mol addrep 0
 mol modselect 4 0 resname H3O or same residue as (name OH2 and ((within 7 of (resid 799 and name OG1)) or (within 5 of (resid 767 and name OG)) or (within 5 of (resid 763 and name OH)) or (within 6 of (resid 908 and name OE1 OE2 OD1 OD2)) or (within 7 of (resid 794 and name NE1)) or (within 7 of (resid 944 and name ND1 NE2))))
-mol modstyle 4 0 VMD
+mol modstyle 4 0 VDW
 #mol addrep 0
 #mol modselect 4 0 resname H3O
 #mol modstyle 4 0 CPK
