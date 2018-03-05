@@ -17,6 +17,8 @@ def parse():
             default = '0.30121,0.729736,0.6138062')
     parser.add_argument("--binsize", help='binsize for making slices',
             default = '0.25')
+    parser.add_argument("--dilute", help='dilute by this value',
+            default = '250')
     return parser.parse_args()
 
 def ave(s):
@@ -30,6 +32,7 @@ if __name__=="__main__":
     df = read_colvar(args.cv_file)
     cec_string = args.cec_name
     cen_string = args.cen_name
+    dilute = int(args.dilute)
     rot = np.array([
         np.vectorize(float)(args.rotx.split(",")),
         np.vectorize(float)(args.roty.split(",")),
@@ -39,7 +42,8 @@ if __name__=="__main__":
     x = df[cec_string + ".x"] - df[cen_string + ".x"]
     y = df[cec_string + ".y"] - df[cen_string + ".y"]
     z = df[cec_string + ".z"] - df[cen_string + ".z"]
-    pro_cec = np.dot(rot, [x, y, z])
+    pro_cec = np.dot(rot, [x[::dilute], y[::dilute], z[::dilute]])
     zcen = np.arange(min(pro_cec[2]), max(pro_cec[2]), binsize)
     ave_pro = [ave(s) for s in zcen]
     ave_pos = np.dot(ave_pro, rot)
+    X = np.array([[a,b,c] for a,b,c in zip(x,y,z)])
