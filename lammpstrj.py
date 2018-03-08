@@ -1,6 +1,7 @@
 #import sys, commands, re, glob, types
 import sys, re, glob, types
 from os import popen
+import functools
 from math import *             # any function could be used by set()
 import numpy as np
 
@@ -29,7 +30,7 @@ class dump:
     self.flist = []
     for word in words: self.flist += glob.glob(word)
     if len(self.flist) == 0 and len(list) == 1:
-      raise StandardError("no dump file specified")
+      raise Exception("no dump file specified")
     
     if len(list) == 1:
       self.increment = 0
@@ -63,7 +64,7 @@ class dump:
 
     # sort entries by timestep, cull duplicates
 
-    self.snaps.sort(key=self.compare_time)
+    self.snaps.sort(key=functools.cmp_to_key(self.compare_time))
     self.cull()
     self.nsnaps = len(self.snaps)
     print("read %d snapshots" % self.nsnaps)
@@ -81,9 +82,9 @@ class dump:
 
     # if snapshots are scaled, unscale them
 
-    if (not self.names.has_key("x")) or \
-       (not self.names.has_key("y")) or \
-       (not self.names.has_key("z")):
+    if (not ("x" in self.names)) or \
+       (not ("y" in self.names)) or \
+       (not ("z" in self.names)):
       print("dump scaling status is unknown")
     elif self.nsnaps > 0:
       if self.scale_original == 1: 
@@ -98,7 +99,7 @@ class dump:
   def next(self):
 
     if not self.increment: 
-        raise StandardError("cannot read incrementally")
+        raise Exception("cannot read incrementally")
 
     # read next snapshot in current file using eof as pointer
     # if fail, try next file
@@ -145,97 +146,96 @@ class dump:
   
   def read_snapshot(self,f):
     try:
-      snap = Snap()
-      item = f.readline()
-      snap.time = int(f.readline().split()[0])    # just grab 1st field
-      item = f.readline()
-      snap.natoms = int(f.readline())
-
-      snap.aselect = np.zeros(snap.natoms)
-
-      item = f.readline()
-      words = item.split("BOUNDS ")
-      if len(words) == 1: snap.boxstr = ""
-      else: snap.boxstr = words[1].strip()
-      if "xy" in snap.boxstr: snap.triclinic = 1
-      else: snap.triclinic = 0
-      
-      words = f.readline().split()
-      if len(words) == 2:
-        snap.xlo,snap.xhi,snap.xy = float(words[0]),float(words[1]),0.0
-      else:
-        snap.xlo,snap.xhi,snap.xy = \
-            float(words[0]),float(words[1]),float(words[2])
-
-      words = f.readline().split()
-      if len(words) == 2:
-        snap.ylo,snap.yhi,snap.xz = float(words[0]),float(words[1]),0.0
-      else:
-        snap.ylo,snap.yhi,snap.xz = \
-            float(words[0]),float(words[1]),float(words[2])
-
-      words = f.readline().split()
-      if len(words) == 2:
-        snap.zlo,snap.zhi,snap.yz = float(words[0]),float(words[1]),0.0
-      else:
-        snap.zlo,snap.zhi,snap.yz = \
-            float(words[0]),float(words[1]),float(words[2])
-          
-      item = f.readline()
-      if len(self.names) == 0:
-        self.scale_original = -1
-        xflag = yflag = zflag = -1
-        words = item.split()[2:]
-        if len(words):
-          for i in range(len(words)):
-            if words[i] == "x" or words[i] == "xu":
-              xflag = 0
-              self.names["x"] = i
-            elif words[i] == "xs" or words[i] == "xsu":
-              xflag = 1
-              self.names["x"] = i
-            elif words[i] == "y" or words[i] == "yu":
-              yflag = 0
-              self.names["y"] = i
-            elif words[i] == "ys" or words[i] == "ysu":
-              yflag = 1
-              self.names["y"] = i
-            elif words[i] == "z" or words[i] == "zu":
-              zflag = 0
-              self.names["z"] = i
-            elif words[i] == "zs" or words[i] == "zsu":
-              zflag = 1
-              self.names["z"] = i
-            else: self.names[words[i]] = i
-          if xflag == 0 and yflag == 0 and zflag == 0: self.scale_original = 0
-          if xflag == 1 and yflag == 1 and zflag == 1: self.scale_original = 1
-          
-      if snap.natoms:
+        snap = Snap()
+        item = f.readline()
+        snap.time = int(f.readline().split()[0])    # just grab 1st field
+        item = f.readline()
+        snap.natoms = int(f.readline())
+        
+        snap.aselect = np.zeros(snap.natoms)
+        
+        item = f.readline()
+        words = item.split("BOUNDS ")
+        if len(words) == 1: snap.boxstr = ""
+        else: snap.boxstr = words[1].strip()
+        if "xy" in snap.boxstr: snap.triclinic = 1
+        else: snap.triclinic = 0
+        
         words = f.readline().split()
-        ncol = len(words)
-        for i in range(1,snap.natoms):
-          words += f.readline().split()
-        floats = map(float,words)
-        if oldnumeric: atoms = np.zeros((snap.natoms,ncol),np.Float)
-        else: atoms = np.zeros((snap.natoms,ncol),np.float)
-        start = 0
-        stop = ncol
-        for i in range(snap.natoms):
-          atoms[i] = floats[start:stop]
-          start = stop
-          stop += ncol
-      else: atoms = None
-      snap.atoms = atoms
-      return snap
+        if len(words) == 2:
+          snap.xlo,snap.xhi,snap.xy = float(words[0]),float(words[1]),0.0
+        else:
+          snap.xlo,snap.xhi,snap.xy = \
+              float(words[0]),float(words[1]),float(words[2])
+        
+        words = f.readline().split()
+        if len(words) == 2:
+          snap.ylo,snap.yhi,snap.xz = float(words[0]),float(words[1]),0.0
+        else:
+          snap.ylo,snap.yhi,snap.xz = \
+              float(words[0]),float(words[1]),float(words[2])
+        
+        words = f.readline().split()
+        if len(words) == 2:
+          snap.zlo,snap.zhi,snap.yz = float(words[0]),float(words[1]),0.0
+        else:
+          snap.zlo,snap.zhi,snap.yz = \
+              float(words[0]),float(words[1]),float(words[2])
+            
+        item = f.readline()
+        if len(self.names) == 0:
+          self.scale_original = -1
+          xflag = yflag = zflag = -1
+          words = item.split()[2:]
+          if len(words):
+            for i in range(len(words)):
+              if words[i] == "x" or words[i] == "xu":
+                xflag = 0
+                self.names["x"] = i
+              elif words[i] == "xs" or words[i] == "xsu":
+                xflag = 1
+                self.names["x"] = i
+              elif words[i] == "y" or words[i] == "yu":
+                yflag = 0
+                self.names["y"] = i
+              elif words[i] == "ys" or words[i] == "ysu":
+                yflag = 1
+                self.names["y"] = i
+              elif words[i] == "z" or words[i] == "zu":
+                zflag = 0
+                self.names["z"] = i
+              elif words[i] == "zs" or words[i] == "zsu":
+                zflag = 1
+                self.names["z"] = i
+              else: self.names[words[i]] = i
+            if xflag == 0 and yflag == 0 and zflag == 0: self.scale_original = 0
+            if xflag == 1 and yflag == 1 and zflag == 1: self.scale_original = 1
+            
+        if snap.natoms:
+          words = f.readline().split()
+          ncol = len(words)
+          for i in range(1,snap.natoms):
+            words += f.readline().split()
+          floats = np.vectorize(float)(words)
+          atoms = np.zeros((snap.natoms,ncol),np.float)
+          start = 0
+          stop = ncol
+          for i in range(snap.natoms):
+            atoms[i] = floats[start:stop]
+            start = stop
+            stop += ncol
+        else: atoms = None
+        snap.atoms = atoms
+        return snap
     except:
-      return 0
+        return 0
 
   # --------------------------------------------------------------------
   # map atom column names
-  
+
   def map(self,*pairs):
     if len(pairs) % 2 != 0:
-      raise StandardError("dump map() requires pairs of mappings")
+      raise Exception("dump map() requires pairs of mappings")
     for i in range(0,len(pairs),2):
       j = i + 1
       self.names[pairs[j]] = pairs[i]-1
@@ -643,7 +643,7 @@ class dump:
     for snap in self.snaps:
       if not snap.tselect: continue
       if snap.nselect != len(vec):
-        raise StandardError("vec length does not match # of selected atoms")
+        raise Exception("vec length does not match # of selected atoms")
       atoms = snap.atoms
       m = 0
       for i in range(snap.natoms):
@@ -709,7 +709,7 @@ class dump:
 
   def atom(self,n,*list):
     if len(list) == 0:
-      raise StandardError("no columns specified")
+      raise Exception("no columns specified")
     columns = []
     values = []
     for name in list:
@@ -725,7 +725,7 @@ class dump:
       for i in range(snap.natoms):
         if atoms[i][id] == n: break
       if atoms[i][id] != n:
-        raise StandardError("could not find atom ID in snapshot")
+        raise Exception("could not find atom ID in snapshot")
       for j in range(ncol):
         values[j][m] = atoms[i][columns[j]]
       m += 1
@@ -740,7 +740,7 @@ class dump:
     snap = self.snaps[self.findtime(n)]
     
     if len(list) == 0:
-      raise StandardError("no columns specified")
+      raise Exception("no columns specified")
     columns = []
     values = []
     for name in list:
@@ -767,8 +767,7 @@ class dump:
     self.map(ncol+1,str)
     for snap in self.snaps:
       atoms = snap.atoms
-      if oldnumeric: newatoms = np.zeros((snap.natoms,ncol+1),np.Float)
-      else: newatoms = np.zeros((snap.natoms,ncol+1),np.float)
+      newatoms = np.zeros((snap.natoms,ncol+1),np.float)
       newatoms[:,0:ncol] = snap.atoms
       snap.atoms = newatoms
 
@@ -891,7 +890,7 @@ class dump:
   def findtime(self,n):
     for i in range(self.nsnaps):
       if self.snaps[i].time == n: return i
-    raise StandardError("no step %d exists" % n)
+    raise Exception("no step %d exists" % n)
 
   # --------------------------------------------------------------------
   # return maximum box size across all selected snapshots
@@ -944,7 +943,7 @@ class dump:
           self.bondflag = 1
           self.bondlist = bondlist
       except:
-        raise StandardError("could not extract bonds from data object")
+        raise Exception("could not extract bonds from data object")
 
     # cdata object, grab tris and lines statically
     
@@ -959,7 +958,7 @@ class dump:
           self.lineflag = 1
           self.linelist = lines
       except:
-        raise StandardError("could not extract tris/lines from cdata object")
+        raise Exception("could not extract tris/lines from cdata object")
 
     # mdump object, grab tris dynamically
     
@@ -986,7 +985,7 @@ class dump:
       self.objextra = arg
 
     else:
-      raise StandardError("unrecognized argument to dump.extra()")
+      raise Exception("unrecognized argument to dump.extra()")
       
   # --------------------------------------------------------------------
 
