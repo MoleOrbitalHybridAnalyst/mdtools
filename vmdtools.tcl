@@ -58,8 +58,30 @@ proc draw_path {mol path_file {color orange} {radius 0.2} {resolution 10}} {
    graphics $mol color $color
    set path_dat [split $path_filedat "\n"]
    foreach line $path_dat {
-      #puts $line
+      if {[expr {$line eq ""}]} {
+         continue
+      }
       set splits [split $line]
       graphics $mol sphere [list [lindex $splits 0] [lindex $splits 1] [lindex $splits 2]] radius $radius resolution $resolution
+   }
+}
+
+proc draw_text {mol text_file {size 1.4} {thickness 2.8}} {
+   set fp [open $text_file r]
+   set text_filedat [read $fp]
+   close $fp
+   set text_dat [split $text_filedat "\n"]
+   foreach line $text_dat {
+      if {[expr {$line eq ""}]} {
+         continue
+      }
+      set splits [split $line]
+      if {[lindex $splits 3] > 0.0} {
+         graphics $mol color red
+      } else {
+         graphics $mol color blue
+      }
+      set aux [list [lindex $splits 0] [lindex $splits 1] [lindex $splits 2]]
+      graphics $mol text $aux [lindex $splits 3] size $size thickness $thickness
    }
 }

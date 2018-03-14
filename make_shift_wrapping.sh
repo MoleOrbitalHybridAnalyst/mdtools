@@ -1,2 +1,1 @@
-module purge
-g++ shift_wrapping.cpp -o shift_wrapping -lpdb -std=c++0x -L/home/chhli/local/lib  -Wall 
+g++ shift_wrapping.cpp -o shift_wrapping -lpdb  -L/home/chhli/local/lib -I/home/chhli/share/pdb/include -Wall 

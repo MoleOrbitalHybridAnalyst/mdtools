@@ -21,6 +21,8 @@ if __name__=='__main__':
     fp2 = open(args.file2, "r")
     result = []
     for line1,line2 in zip(fp1,fp2):
+        if re.match("\s*#", line1): continue
+        if re.match("\s*#", line2): continue
         values1 = np.vectorize(float)(line1.split())[col1]
         values2 = np.vectorize(float)(line2.split())[col2]
         diff = values1 - values2
@@ -37,7 +39,8 @@ if __name__=='__main__':
     if args.result != None:
         df = pd.DataFrame(np.array(result))
         columns = []
-        for col1_,col1_ in zip(col1,col2):
-            columns.append("file1."+str(col1_)+"-file2"+str(col2_))
+        for col1_,col2_ in zip(col1,col2):
+            columns.append("file1."+str(col1_)+"-file2."+str(col2_))
+        columns.append("diff2")
         df.columns = columns
         df.to_colvar(args.result)
