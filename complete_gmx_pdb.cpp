@@ -21,8 +21,8 @@ int main(int argc, char **argv)
    PDBDef def_pot("/home/chhli/share/pot.def");
    PDBDef def_cla("/home/chhli/share/cla.def");
    PDBDef def_sod("/home/chhli/share/sod.def");
-   char chainid_protein = 'P', chainid_lipid = 'O';
-   char chainid_ion = 'O', chainid_water = 'W';
+   string chainid_protein = "P", chainid_lipid = "O";
+   string chainid_ion = "O", chainid_water = "W";
 
    //do the protein
    vector<size_t> indexes = pdb.selectAtoms(def_protein);
@@ -31,12 +31,12 @@ int main(int argc, char **argv)
    for(auto index : indexes) {
       if(pdb.getResid(index) < pre_resid) number++;
       pre_resid = pdb.getResid(index);
-      pdb.setSegname(index, string(1,chainid_protein) + to_string(number));
+      pdb.setSegname(index, chainid_protein + to_string(number));
    }
 
    //do the lipid
    pdb.setChainid(def_lipid, chainid_lipid);
-   pdb.setSegname(def_lipid, string(1,chainid_lipid) + "1");
+   pdb.setSegname(def_lipid, chainid_lipid + "1");
 
    //do the ions
    number = 2;
@@ -44,7 +44,7 @@ int main(int argc, char **argv)
    indexes = pdb.selectAtoms(def_pot);
    if(!indexes.empty()) {
       for(auto index : indexes) {
-         pdb.setSegname(index, string(1,chainid_ion) + to_string(number));
+         pdb.setSegname(index, chainid_ion + to_string(number));
          pdb.setChainid(index, chainid_ion);
          pdb.setResid(index, resid++);
       }
@@ -53,7 +53,7 @@ int main(int argc, char **argv)
    indexes = pdb.selectAtoms(def_sod); resid = 1;
    if(!indexes.empty()) {
       for(auto index : indexes) {
-         pdb.setSegname(index, string(1,chainid_ion) + to_string(number));
+         pdb.setSegname(index, chainid_ion + to_string(number));
          pdb.setChainid(index, chainid_ion);
          pdb.setResid(index, resid++);
       }
@@ -62,7 +62,7 @@ int main(int argc, char **argv)
    indexes = pdb.selectAtoms(def_cla); resid = 1;
    if(!indexes.empty()) {
       for(auto index : indexes) {
-         pdb.setSegname(index, string(1,chainid_ion) + to_string(number));
+         pdb.setSegname(index, chainid_ion + to_string(number));
          pdb.setChainid(index, chainid_ion);
          pdb.setResid(index, resid++);
       }
@@ -77,7 +77,7 @@ int main(int argc, char **argv)
          count = 0; number++;
       }
       pdb.setChainid(index, chainid_water);
-      pdb.setSegname(index, string(1,chainid_water) + to_string(number));
+      pdb.setSegname(index, chainid_water + to_string(number));
       pdb.setResid(index, count / 3 + 1);
       count++;
    }

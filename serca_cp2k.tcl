@@ -17,6 +17,9 @@ mol modstyle 4 0 VDW
 #mol addrep 0
 #mol modselect 4 0 resname H3O
 #mol modstyle 4 0 CPK
+mol addrep 0
+mol modselect 5 0 resid 899 961 962 963 966 967 970 and protein
+mol modstyle 5 0 Licorice
 display projection orthographic
 rotate x by 52.1348
 rotate z by 22.42915942
