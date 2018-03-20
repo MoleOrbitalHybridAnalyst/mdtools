@@ -20,6 +20,9 @@ mol modstyle 4 0 VDW
 mol addrep 0
 mol modselect 5 0 resid 899 961 962 963 966 967 970 and protein
 mol modstyle 5 0 Licorice
+mol addrep 0
+mol modselect 6 0 same residue as (name OH2 and within 10 of index 14874)
+mol modstyle 6 0 DynamicBonds
 display projection orthographic
 rotate x by 52.1348
 rotate z by 22.42915942
