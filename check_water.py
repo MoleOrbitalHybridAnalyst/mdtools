@@ -1,4 +1,5 @@
 #!/usr/bin/env python2
+from __future__ import print_function
 from pypdb import *
 import argparse
 
@@ -19,7 +20,7 @@ if __name__=="__main__":
     for index in selo:
         if pdb.pbc_distance2(index,index+1) > dist2 or \
             pdb.pbc_distance2(index, index+2) > dist2:
-            print "serial",index + 1
+            print(index + 1,end=' ')
 
     defhyd = pdb_def("chainid W and atomtype O and resname H3O")
     selhyd = pdb.select_atoms(defhyd)
@@ -29,4 +30,5 @@ if __name__=="__main__":
     if pdb.pbc_distance2(index,index+1) > dist2 or \
         pdb.pbc_distance2(index, index+2) > dist2 or \
         pdb.pbc_distance2(index, index+3) > dist2:
-        print "serial",index + 1
+        print(index + 1,end=' ')
+    print("")
