@@ -5,10 +5,10 @@ import argparse
 def parse():
     parser = argparse.ArgumentParser()
     parser.add_argument('COLVAR', help='input COLVAR')
-    parser.add_argument('--fields', help='fields to be printed')
+    parser.add_argument('-f', '--fields', help='fields to be printed')
     parser.add_argument('--noheader', 
             help='do not print header', action='store_true')
-    parser.add_argument('--regex', 
+    parser.add_argument('-r', '--regex', 
             help='match the columns using regex', action='store_true')
     return parser.parse_args()
 
