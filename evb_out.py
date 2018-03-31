@@ -1,14 +1,6 @@
 import re
-import argparse
-import lammpstrj
 import numpy as np
 import pandas as pd
-
-def parse():
-    parser = argparse.ArgumentParser()
-    parser.add_argument('evb_out', help='evb.out')
-    parser.add_argument('lammpstrj', help='lammps trj')
-    return parser.parse_args()
 
 def stop_at_special_line(fp, pattern):
     last_pos = fp.tell()
@@ -27,8 +19,10 @@ class evb_out:
         self.fname = evb_out_fn
         self.time_trj = []
         self.states_trj = []
+        self.cec_trj = []
+        self.dipole_trj = []
 
-        fp_evb = open(args.evb_out, "r")
+        fp_evb = open(evb_out_fn, "r")
         while True:
             #parse timestep
             if not stop_at_special_line(fp_evb, "TIMESTEP"): break
@@ -37,6 +31,14 @@ class evb_out:
             #parse COMPLEX
             if not stop_at_special_line(fp_evb, "COMPLEX "): break
             self.states_trj.append(evb_states(fp_evb))
+            #parse CEC
+            if not stop_at_special_line(fp_evb, "CEC_COORD"): break
+            line = fp_evb.readline(); line = fp_evb.readline()
+            self.cec_trj.append(np.vectorize(float)(line.split()))
+            #parse DIPOLE
+            if not stop_at_special_line(fp_evb, "DIPOLE"): break
+            line = fp_evb.readline(); line = fp_evb.readline()
+            self.dipole_trj.append(np.vectorize(float)(line.split()))
             if not line: break
         fp_evb.close()
 
@@ -84,7 +86,3 @@ class evb_states:
         self.path = np.array(self.path)
         self.extra_cpl = np.array(self.extra_cpl)
 
-if __name__=="__main__":
-    args = parse()
-    lmp = lammpstrj.dump(args.lammpstrj)
-    evb = evb_out(args.evb_out)
