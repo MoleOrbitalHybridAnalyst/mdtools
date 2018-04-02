@@ -17,21 +17,35 @@ if __name__=='__main__':
     col1 = np.vectorize(int)(args.col1.split(','))
     col2 = np.vectorize(int)(args.col2.split(','))
     assert len(col1) == len(col2)
-    fp1 = open(args.file1, "r")
-    fp2 = open(args.file2, "r")
+    if args.file1 == args.file2:
+        fp1 = open(args.file1, "r")
+    else:
+        fp1 = open(args.file1, "r")
+        fp2 = open(args.file2, "r")
     result = []
-    for line1,line2 in zip(fp1,fp2):
-        if re.match("\s*#", line1): continue
-        if re.match("\s*#", line2): continue
-        values1 = np.vectorize(float)(line1.split())[col1]
-        values2 = np.vectorize(float)(line2.split())[col2]
-        diff = values1 - values2
-        ph = []
-        ph.extend(diff)
-        ph.append(np.sum(diff**2))
-        result.append(ph)
+    if args.file1 == args.file2:
+        for line1 in fp1:
+            if re.match("\s*#", line1): continue
+            values1 = np.vectorize(float)(line1.split())[col1]
+            values2 = np.vectorize(float)(line1.split())[col2]
+            diff = values1 - values2
+            ph = []
+            ph.extend(diff)
+            ph.append(np.sum(diff**2))
+            result.append(ph)
+    else:
+        for line1,line2 in zip(fp1,fp2):
+            if re.match("\s*#", line1): continue
+            if re.match("\s*#", line2): continue
+            values1 = np.vectorize(float)(line1.split())[col1]
+            values2 = np.vectorize(float)(line2.split())[col2]
+            diff = values1 - values2
+            ph = []
+            ph.extend(diff)
+            ph.append(np.sum(diff**2))
+            result.append(ph)
     fp1.close()
-    fp2.close()
+    if args.file1 != args.file2: fp2.close()
     diff2 = [_[-1] for _ in result]
     print("largest deviation =",np.max(diff2),"at line",np.argmax(diff2)+1)
     print("average deviation =",np.mean(diff2))
