@@ -66,7 +66,7 @@ proc draw_path {mol path_file {color orange} {radius 0.2} {resolution 10}} {
    }
 }
 
-proc draw_text {mol text_file {size 1.4} {thickness 2.8}} {
+proc draw_texts {mol text_file {size 1.4} {thickness 2.8}} {
    set fp [open $text_file r]
    set text_filedat [read $fp]
    close $fp
@@ -83,5 +83,24 @@ proc draw_text {mol text_file {size 1.4} {thickness 2.8}} {
       }
       set aux [list [lindex $splits 0] [lindex $splits 1] [lindex $splits 2]]
       graphics $mol text $aux [lindex $splits 3] size $size thickness $thickness
+   }
+}
+
+proc draw_arrows {mol arrow_file {color red} {radius1 0.1} {radius2 0.15}} {
+   set fp [open $arrow_file r]
+   set arrow_filedat [read $fp]
+   close $fp
+   set arrow_dat [split $arrow_filedat "\n"]
+   foreach line $arrow_dat {
+      if {[expr {$line eq ""}]} {
+         continue
+      }
+      set splits [split $line]
+      set start [lindex [[atomselect $mol "serial [lindex $splits 0]"] get {x y z}] 0]
+      set v [lindex $splits 1]
+      lappend v [lindex $splits 2]
+      lappend v [lindex $splits 3]
+      set end [vecadd $start $v]
+      draw_arrow $mol $start $end $color $radius1 $radius2
    }
 }
