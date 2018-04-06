@@ -9,14 +9,27 @@ def parse():
             default = '0')
     parser.add_argument('--col2', help='columns to be compared in file2',
             default = '0')
+    parser.add_argument('--prds', help='periods of the fields')
     parser.add_argument('--result', help='output file of differences')
     return parser.parse_args()
+
+def pbc_diff(x,y,p):
+    if args.prds == None:
+        return x - y
+    else:
+        d = x - y
+        k = np.floor(d / p + 0.5)
+        return d - k * p 
 
 if __name__=='__main__':
     args = parse()
     col1 = np.vectorize(int)(args.col1.split(','))
     col2 = np.vectorize(int)(args.col2.split(','))
+    prds = np.zeros(len(col1))
     assert len(col1) == len(col2)
+    if args.prds != None:
+        prds = np.vectorize(float)(args.prds.split(','))
+        assert len(col1) == len(prds)
     if args.file1 == args.file2:
         fp1 = open(args.file1, "r")
     else:
@@ -28,7 +41,8 @@ if __name__=='__main__':
             if re.match("\s*#", line1): continue
             values1 = np.vectorize(float)(line1.split())[col1]
             values2 = np.vectorize(float)(line1.split())[col2]
-            diff = values1 - values2
+            # diff = values1 - values2
+            diff = pbc_diff(values1, values2, prds)
             ph = []
             ph.extend(diff)
             ph.append(np.sum(diff**2))
@@ -39,7 +53,8 @@ if __name__=='__main__':
             if re.match("\s*#", line2): continue
             values1 = np.vectorize(float)(line1.split())[col1]
             values2 = np.vectorize(float)(line2.split())[col2]
-            diff = values1 - values2
+            # diff = values1 - values2
+            diff = pbc_diff(values1, values2, prds)
             ph = []
             ph.extend(diff)
             ph.append(np.sum(diff**2))
