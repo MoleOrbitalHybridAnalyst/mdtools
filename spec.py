@@ -54,23 +54,23 @@ df_dipole = read_colvar("dipole.dat")
 
 df_ = pd.DataFrame([[_,__1,__2,__3] for _,__1,__2,__3 in \
         zip(wn_rmdcec,f_rmdcec,f_cross_rmdcec,f_rest_rmdcec)])
-df_.columns = ["wavenumber","abs", "cross", "rest"]
+df_.columns = ["wavenumber","abs", "cross", "rest", "abs+cross", "total"]
 df_[df_.wavenumber>=0].to_colvar("./rmdcec_abs.dat")
-df_ = pd.DataFrame([[_,__1,__2,__3] for _,__1,__2,__3 in zip(wn_qc,f_qc,f_cross_qc,f_rest_qc)])
-df_.columns = ["wavenumber","abs", "cross", "rest"]
+df_ = pd.DataFrame([[_,__1,__2,__3,__1+__2,__1+__2+__3] for _,__1,__2,__3 in zip(wn_qc,f_qc,f_cross_qc,f_rest_qc)])
+df_.columns = ["wavenumber","abs", "cross", "rest", "abs+cross", "total"]
 df_[df_.wavenumber>=0].to_colvar("./qc_abs.dat")
-df_ = pd.DataFrame([[_,__1,__2,__3] for _,__1,__2,__3 in zip(wn_pi,f_pi,f_cross_pi,f_rest_pi)])
-df_.columns = ["wavenumber","abs", "cross", "rest"]
+df_ = pd.DataFrame([[_,__1,__2,__3,__1+__2,__1+__2+__3] for _,__1,__2,__3 in zip(wn_pi,f_pi,f_cross_pi,f_rest_pi)])
+df_.columns = ["wavenumber","abs", "cross", "rest", "abs+cross", "total"]
 df_[df_.wavenumber>=0].to_colvar("./pi_abs.dat")
-df_ = pd.DataFrame([[_,__1,__2,__3] for _,__1,__2,__3 in \
+df_ = pd.DataFrame([[_,__1,__2,__3,__1+__2,__1+__2+__3] for _,__1,__2,__3 in \
         zip(wn_evbcec,f_evbcec,f_cross_evbcec,f_rest_evbcec)])
-df_.columns = ["wavenumber","abs", "cross", "rest"]
+df_.columns = ["wavenumber","abs", "cross", "rest", "abs+cross", "total"]
 df_[df_.wavenumber>=0].to_colvar("./evbcec_abs.dat")
 
 #mask = (wn_rmdcec >= 600) & (wn_rmdcec <= 4000)
 mask = wn_rmdcec >= 0
-plt.figure()
-plt.plot(wn_rmdcec[mask], f_rmdcec[mask])
-plt.plot(wn_qc[mask], f_qc[mask])
-plt.plot(wn_pi[mask], f_pi[mask])
-plt.plot(wn_evbcec[mask], f_evbcec[mask])
+#plt.figure()
+#plt.plot(wn_rmdcec[mask], f_rmdcec[mask])
+#plt.plot(wn_qc[mask], f_qc[mask])
+#plt.plot(wn_pi[mask], f_pi[mask])
+#plt.plot(wn_evbcec[mask], f_evbcec[mask])
