@@ -19,8 +19,13 @@ my $pdx; my $pdy; my $pdz;
 my $dx; my $dy; my $dz;
 $pdx = $pdy = $pdz = 0.0;
 $dx = $dy = $dz = 0.0;
+
+my $string = shift @ARGV;
+
+print "#! FIELDS timestep dx dy dz\n";
+
 while(<>) {
-   if(/DIPOLE/) {
+   if(/$string/) {
       $stat ++;
       next;
    }

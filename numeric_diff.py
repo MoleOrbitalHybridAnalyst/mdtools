@@ -39,8 +39,8 @@ if __name__=='__main__':
     if args.file1 == args.file2:
         for line1 in fp1:
             if re.match("\s*#", line1): continue
-            values1 = np.vectorize(float)(line1.split())[col1]
-            values2 = np.vectorize(float)(line1.split())[col2]
+            values1 = np.vectorize(float)(np.array(line1.split())[col1])
+            values2 = np.vectorize(float)(np.array(line1.split())[col2])
             # diff = values1 - values2
             diff = pbc_diff(values1, values2, prds)
             ph = []
@@ -51,8 +51,8 @@ if __name__=='__main__':
         for line1,line2 in zip(fp1,fp2):
             if re.match("\s*#", line1): continue
             if re.match("\s*#", line2): continue
-            values1 = np.vectorize(float)(line1.split())[col1]
-            values2 = np.vectorize(float)(line2.split())[col2]
+            values1 = np.vectorize(float)(np.array(line1.split())[col1])
+            values2 = np.vectorize(float)(np.array(line2.split())[col2])
             # diff = values1 - values2
             diff = pbc_diff(values1, values2, prds)
             ph = []
