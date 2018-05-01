@@ -52,7 +52,7 @@ df_dipole = read_colvar("dipole.dat")
         = do_spec("pos_evbcec")
 
 
-df_ = pd.DataFrame([[_,__1,__2,__3] for _,__1,__2,__3 in \
+df_ = pd.DataFrame([[_,__1,__2,__3,__1+__2,__1+__2+__3] for _,__1,__2,__3 in \
         zip(wn_rmdcec,f_rmdcec,f_cross_rmdcec,f_rest_rmdcec)])
 df_.columns = ["wavenumber","abs", "cross", "rest", "abs+cross", "total"]
 df_[df_.wavenumber>=0].to_colvar("./rmdcec_abs.dat")
