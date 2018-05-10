@@ -152,7 +152,7 @@ int main(int argc, char **argv) {
             //Vector pbc_dist = pdb.pbcDistance(this_grid, pdb.getCoordinates(index));
             den += fsw3(
                   //std::experimental::make_array(pbc_dist[0], pbc_dist[1], pbc_dist[2]),
-                  pdb.pbcDistance(*this_grid, pdb.getCoordinates(index));
+                  pdb.pbcDistance(*grid_iter, pdb.getCoordinates(index)),
                   resols);
 
 //            if(grid_iter==grids.begin()+467) {
