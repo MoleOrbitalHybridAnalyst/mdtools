@@ -4,11 +4,13 @@
 #include <sstream>
 #include <cmath>
 
-#include <experimental/array>
+//#include <experimental/array>
 
 #include <unistd.h>
 #include "pdb.h"
 #include "utili.h"
+
+#include "mpi.h"
 
 #include <chrono>
 using namespace std::chrono;
@@ -120,8 +122,17 @@ int main(int argc, char **argv) {
       grids.push_back(grid);
    }
 
+   // intialize mpi
+   MPI_Init(NULL, NULL);
+   int world_size;
+   MPI_Comm_size(MPI_COMM_WORLD, &world_size);
+   int world_rank;
+   MPI_Comm_rank(MPI_COMM_WORLD, &world_rank);
+
+
    // read pdbs and construct density
-   for(int num = 0; num  < nframes; ++num) {
+   //for(int num = 0; num  < nframes; ++num) {
+   for(int num = world_rank; num  < nframes; num += world_size) {
       stringstream sspdb;
       sspdb << string(pvalue) <<'/'<< num << ".pdb";
       cout << sspdb.str() << endl;
@@ -170,6 +181,10 @@ int main(int argc, char **argv) {
       fsden.close();
       //t2 = high_resolution_clock::now();
       //cout << duration_cast<duration<double>>(t2-t1).count() << endl;
+      
    }
+
+   // finialize MPI
+   MPI_Finalize();
    
 }
