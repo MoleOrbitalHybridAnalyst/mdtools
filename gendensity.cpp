@@ -4,8 +4,11 @@
 #include <sstream>
 #include <cmath>
 
+#include <experimental/array>
+
 #include <unistd.h>
 #include "pdb.h"
+#include "utili.h"
 
 #include <chrono>
 using namespace std::chrono;
@@ -141,8 +144,10 @@ int main(int argc, char **argv) {
 //            coord[1] = pdb.getY(index) - 42.08624982833863;
 //            coord[2] = pdb.getZ(index) - 112.31375217437744;
             //den += fsw3(pdb.pbcDistance(*grid_iter, coord), resols);
+            Vector this_grid((*grid_iter)[0],(*grid_iter)[1],(*grid_iter)[2]);
+            Vector pbc_dist = pdb.pbcDistance(this_grid, pdb.getCoordinates(index));
             den += fsw3(
-                  pdb.pbcDistance(*grid_iter, pdb.getCoordinates(index)),
+                  std::experimental::make_array(pbc_dist[0], pbc_dist[1], pbc_dist[2]),
                   resols);
 
 //            if(grid_iter==grids.begin()+467) {
