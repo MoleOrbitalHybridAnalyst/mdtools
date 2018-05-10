@@ -28,7 +28,9 @@ void message_abort(ostream& s, string str) {
    abort();
 }
 
-double fsw3(const array<float, 3>& dist, const array<float ,3>& resols) {
+//double fsw3(const array<float, 3>& dist, const array<float ,3>& resols) {
+template <class T, class S>
+double fsw3(const T& dist, const S& resols) {
    double den = 1.0;
    for(int i = 0; i < 3; ++i) {
       if(dist[i] > resols[i] or dist[i] < -resols[i]) {
@@ -106,12 +108,14 @@ int main(int argc, char **argv) {
    stringstream(rvalue) >> reso;
    array<float, 3> resols;
    resols[0] = reso; resols[1] = reso; resols[2] = reso;
-   vector<array<float, 3>> grids;
+   //vector<array<float, 3>> grids;
+   vector<Vector> grids;
    ifstream fsgrid(gvalue);
    string line;
    while(getline(fsgrid, line)) {
       stringstream ss(line);
-      array<float, 3> grid;
+      //array<float, 3> grid;
+      Vector grid(0.0);
       ss >> grid[0] >> grid[1] >> grid[2];
       grids.push_back(grid);
    }
@@ -144,10 +148,11 @@ int main(int argc, char **argv) {
 //            coord[1] = pdb.getY(index) - 42.08624982833863;
 //            coord[2] = pdb.getZ(index) - 112.31375217437744;
             //den += fsw3(pdb.pbcDistance(*grid_iter, coord), resols);
-            Vector this_grid((*grid_iter)[0],(*grid_iter)[1],(*grid_iter)[2]);
-            Vector pbc_dist = pdb.pbcDistance(this_grid, pdb.getCoordinates(index));
+            //Vector this_grid((*grid_iter)[0],(*grid_iter)[1],(*grid_iter)[2]);
+            //Vector pbc_dist = pdb.pbcDistance(this_grid, pdb.getCoordinates(index));
             den += fsw3(
-                  std::experimental::make_array(pbc_dist[0], pbc_dist[1], pbc_dist[2]),
+                  //std::experimental::make_array(pbc_dist[0], pbc_dist[1], pbc_dist[2]),
+                  pdb.pbcDistance(*this_grid, pdb.getCoordinates(index));
                   resols);
 
 //            if(grid_iter==grids.begin()+467) {
