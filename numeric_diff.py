@@ -63,6 +63,7 @@ if __name__=='__main__':
     if args.file1 != args.file2: fp2.close()
     diff2 = [_[-1] for _ in result]
     print("largest deviation =",np.max(diff2),"at line",np.argmax(diff2)+1)
+    print("smallest deviation =",np.min(diff2),"at line",np.argmin(diff2)+1)
     print("average deviation =",np.mean(diff2))
     print("stddev of deviation =",np.std(diff2))
     if args.result != None:

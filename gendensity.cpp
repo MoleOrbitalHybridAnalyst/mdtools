@@ -3,6 +3,7 @@
 #include <fstream>
 #include <sstream>
 #include <cmath>
+#include <iomanip>
 
 //#include <experimental/array>
 
@@ -145,6 +146,9 @@ int main(int argc, char **argv) {
       stringstream ssden;
       ssden << string(dvalue) <<'/'<< num <<".dat";
       ofstream fsden(ssden.str());
+      //write the header of COLVAR
+      fsden << "#! FIELDS density" << endl;
+      fsden << fixed;
       //t1 = high_resolution_clock::now();
       for(auto grid_iter = grids.begin(); grid_iter != grids.end(); ++grid_iter)
       {
@@ -176,7 +180,7 @@ int main(int argc, char **argv) {
 //               cout << den << endl;
 //            }
          }
-         fsden << den << '\n';
+         fsden << ' ' << setprecision(8) << den << '\n';
       }
       fsden.close();
       //t2 = high_resolution_clock::now();
