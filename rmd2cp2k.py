@@ -16,6 +16,9 @@ if __name__ == '__main__':
         print('too many arguments', file = stderr); exit()
 
     pdb = pdb_obj(in_pdb)
+
+    pdb.guess_atomtypes()
+
     water_indexes = pdb.select_atoms(pdb_def('resname SPCF'))
     for i in water_indexes: pdb.resnames[i] = 'TIP3'
 
