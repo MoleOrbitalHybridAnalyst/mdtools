@@ -22,6 +22,7 @@ def parse():
                         help = 'number of samples')
     parser.add_argument('-e', '--equil_time', default = 50.0, 
                         help = 'equil time in each dir')
+    parser.add_argument('-c', '--cv_chk', help = 'checkpoint file for cv')
     
     return parser.parse_args()
 
@@ -87,6 +88,11 @@ def main():
             for t in times[selected_indexes][mask]:
                 print(args.prefix + str(int(t / args.timestep)), 
                       file = fp_roster)
+
+        if args.cv_chk:
+            df = pd.DataFrame(cvs[selected_indexes][mask])
+            df.columns = [args.field]
+            df.to_colvar(d.strip('\n') + '/' + args.cv_chk)
 
     fp_dir.close()
 

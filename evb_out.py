@@ -20,7 +20,8 @@ class evb_out:
         self.time_trj = []
         self.states_trj = []
         self.cec_trj = []
-        self.dipole_trj = []
+        #self.dipole_trj = []
+        self.eigenv_trj = []
 
         fp_evb = open(evb_out_fn, "r")
         while True:
@@ -31,14 +32,18 @@ class evb_out:
             #parse COMPLEX
             if not stop_at_special_line(fp_evb, "COMPLEX "): break
             self.states_trj.append(evb_states(fp_evb))
+            #parse EIGEN_VECTOR
+            if not stop_at_special_line(fp_evb, "EIGEN_VECTOR"): break
+            line = fp_evb.readline(); line = fp_evb.readline()
+            self.eigenv_trj.append(np.vectorize(float)(line.split()))
             #parse CEC
             if not stop_at_special_line(fp_evb, "CEC_COORD"): break
             line = fp_evb.readline(); line = fp_evb.readline()
             self.cec_trj.append(np.vectorize(float)(line.split()))
-            #parse DIPOLE
-            if not stop_at_special_line(fp_evb, "DIPOLE"): break
-            line = fp_evb.readline(); line = fp_evb.readline()
-            self.dipole_trj.append(np.vectorize(float)(line.split()))
+            ##parse DIPOLE
+            #if not stop_at_special_line(fp_evb, "DIPOLE"): break
+            #line = fp_evb.readline(); line = fp_evb.readline()
+            #self.dipole_trj.append(np.vectorize(float)(line.split()))
             if not line: break
         fp_evb.close()
 
