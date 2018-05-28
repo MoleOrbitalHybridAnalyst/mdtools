@@ -56,6 +56,7 @@ proc draw_path {mol path_file {color orange} {radius 0.2} {resolution 10}} {
    set path_filedat [read $fp]
    close $fp
    graphics $mol color $color
+   global path_dat
    set path_dat [split $path_filedat "\n"]
    foreach line $path_dat {
       if {[expr {$line eq ""}]} {
@@ -63,6 +64,36 @@ proc draw_path {mol path_file {color orange} {radius 0.2} {resolution 10}} {
       }
       set splits [split $line]
       graphics $mol sphere [list [lindex $splits 0] [lindex $splits 1] [lindex $splits 2]] radius $radius resolution $resolution
+   }
+}
+
+# http://www.ks.uiuc.edu/Training/Tutorials/vmd-imgmv/imgmv/tutorial-html/node3.html
+proc enabletrace {} {
+   global vmd_frame
+   trace variable vmd_frame(0) w drawcounter
+}
+
+proc disabletrace {} {
+   global vmd_frame
+   trace vdelete vmd_frame(0) w drawcounter
+}
+
+proc drawcounter { name element op } {
+   global vmd_frame
+   global path_dat
+   graphics 0 delete all
+   graphics 0 color orange
+   set linecount 0
+   foreach line $path_dat {
+      if {[expr {$line eq ""}]} {
+         continue
+      }
+      if {$linecount eq $vmd_frame(0)} {
+         set splits [split $line]
+         graphics 0 sphere [list [lindex $splits 0] [lindex $splits 1] [lindex $splits 2]] radius 0.5 resolution 10
+         break
+      }
+      incr linecount
    }
 }
 
