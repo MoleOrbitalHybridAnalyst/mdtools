@@ -27,3 +27,12 @@ def correlate(v, s):
     v_pad[n//2 : n//2 + n] = v
     s_pad[n//2 : n//2 + n] = s
     return (signal.fftconvolve(v_pad,s_pad[::-1],mode='same'))[(-n):] / np.arange(n,0,-1)
+
+def autocorrelate_vector(v):
+    """
+    compute \\langle \\vec{v}(0)\\cdot\\vec{v}(t) \\rangle
+    """
+    result = np.zeros(len(v))
+    for d in range(len(v[0])):
+        result += autocorrelate(v[:,d])
+    return result
