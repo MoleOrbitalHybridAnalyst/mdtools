@@ -65,7 +65,14 @@ if __name__=="__main__":
             histo /= len(cv1)
             x = np.arange(min1,max1+w1,w1)[:n1+1] + w1/2.0
             y = np.arange(min2,max2+w2,w2)[:n2+1] + w2/2.0
-            cp = plt.contour(x,y,histo,[drawline],colors=[cmap(idir)])
+            #cp = plt.contour(x,y,histo,[drawline],colors=[cmap(idir)])
+            cp = plt.contourf(x, y, histo,
+                    [drawline, 1.0],colors=[cmap(idir), 'b'],
+                    alpha = 0.2)
+            plt.text(np.mean(x), np.mean(y), line.rstrip(), 
+                    color = cmap(idir),
+                    horizontalalignment = 'center', 
+                    verticalalignment = 'center')
             #cp.levels = [line.rstrip()]
             #plt.clabel(cp, cp.levels)
             idir = (idir + 1) % 10
