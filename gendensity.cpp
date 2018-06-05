@@ -6,16 +6,11 @@
 #include <cmath>
 #include <iomanip>
 
-//#include <experimental/array>
-
 #include <unistd.h>
 #include "pdb.h"
 #include "utili.h"
 
 #include "mpi.h"
-
-#include <chrono>
-using namespace std::chrono;
 
 using namespace std;
 using namespace PDB_NS;
@@ -36,7 +31,6 @@ void message_abort(ostream& s, string str) {
    message_abort(s, str, true);
 }
 
-//double fsw3(const array<float, 3>& dist, const array<float ,3>& resols) {
 template <class T, class S>
 double fsw3(const T& dist, const S& resols) {
    double den = 1.0;
@@ -224,10 +218,7 @@ int main(int argc, char **argv) {
       sspdb << string(pvalue) <<'/'<< num << ".pdb";
       cout << sspdb.str() << endl;
 
-      //auto t1 = high_resolution_clock::now();
       PDB pdb(sspdb.str());
-      //auto t2 = high_resolution_clock::now();
-      //cout << duration_cast<duration<double>>(t2-t1).count() << endl;
       
       /*--- construct density ---*/
       stringstream ssden;
@@ -252,7 +243,6 @@ int main(int argc, char **argv) {
 
          fsden << "#! FIELDS density" << endl;
          fsden << fixed;
-         //t1 = high_resolution_clock::now();
          
          for(auto grid_iter = grids.begin(); 
                grid_iter != grids.end(); ++grid_iter)
@@ -276,24 +266,12 @@ int main(int argc, char **argv) {
                den += fsw3(
                      pdb.pbcDistance(*grid_iter, pos), resols);
 
-//               if(grid_iter==grids.begin()+467) {
-//                  //cout << coord[0] << endl;
-//                  if(index==1) {
-//                     printf("%f %f %f\n%f %f %f\n",
-//                           coord[0], coord[1], coord[2],
-//                           (*grid_iter)[0],(*grid_iter)[1],(*grid_iter)[2]);
-//                  }
-//                  cout << den << endl;
-//               }
-
             }
             fsden << ' ' << setprecision(8) << den << '\n';
          }
 
          fsden.close();
 
-         //t2 = high_resolution_clock::now();
-         //cout << duration_cast<duration<double>>(t2-t1).count() << endl;
          
       } // end of loop in transformations
       
