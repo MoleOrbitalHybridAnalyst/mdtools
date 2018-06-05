@@ -36,3 +36,13 @@ def autocorrelate_vector(v):
     for d in range(len(v[0])):
         result += autocorrelate(v[:,d])
     return result
+
+def correlate_vector(v, s):
+    """
+    compute \\langle \\vec{v}(t)\\cdot\\vec{s}(0) \\rangle
+    """
+    assert len(v) == len(s)
+    result = np.zeros(len(v))
+    for d in range(len(v[0])):
+        result += correlate(v[:,d], s[:,d])
+    return result
