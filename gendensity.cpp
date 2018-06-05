@@ -22,7 +22,7 @@ using namespace PDB_NS;
 void print_help(ostream& s) {
    s << "Usage:\n";
    s << "\tgendensity -g grid.xyz -p pdb_dir"<< 
-      " -d density_dir -r resolution -n nframes -c\n";
+      " -d density_dir -r resolution -n nframes\n";
 }
 
 void message_abort(ostream& s, string str) {
@@ -31,6 +31,7 @@ void message_abort(ostream& s, string str) {
    abort();
 }
 
+//double fsw3(const array<float, 3>& dist, const array<float ,3>& resols) {
 template <class T, class S>
 double fsw3(const T& dist, const S& resols) {
    double den = 1.0;
@@ -39,33 +40,11 @@ double fsw3(const T& dist, const S& resols) {
          return 0.0;
       } else {
          double t = fabs(dist[i] / resols[i]) -0.5;
-         den *= (t * (t*t*(-6*t*t+5)-1.875) + 0.5);
-      }
-   }
-   
-   return den;
-}
-
-template <class T, class S, class Q>
-double fsw3(const T& dist, const S& resols, Q& derivs) {
-   Vector f, df;
-   for(int i = 0; i < 3; ++i) {
-      if(dist[i] > resols[i] or dist[i] < -resols[i]) {
-         return 0.0;
-      } else {
-         double t = fabs(dist[i] / resols[i]) -0.5;
          //den *= (t * (t*t*(-6*t*t+5)-1.875) + 0.5);
-         f[i] = (t*(2*t*t - 1.5) + 0.5);
-         df[i] = 
-            static_cast<int>((dist[i] > 0.0) - (dist[i] < 0.0)) * (6*t*t - 1.5);
+         den *= (t*(2*t*t - 1.5) + 0.5);
       }
    }
-   
-   derivs[0] = df[0] *  f[1] *  f[2];
-   derivs[1] =  f[0] * df[1] *  f[2];
-   derivs[2] =  f[0] *  f[1] * df[2];
-
-   return f[0] * f[1] * f[2];
+   return den;
 }
 
 int main(int argc, char **argv) {
@@ -73,11 +52,10 @@ int main(int argc, char **argv) {
    char *nvalue=NULL, *rvalue=NULL;
    int  nframes;
    float reso;
-   bool do_derivs = false;
    
    opterr = 0;
    char argu_key;
-   while((argu_key = getopt(argc, argv,"g:p:d:n:r:c")) != -1)
+   while((argu_key = getopt(argc, argv,"g:p:d:n:r:")) != -1)
       switch(argu_key) {
          case 'g':
             gvalue = optarg;
@@ -93,9 +71,6 @@ int main(int argc, char **argv) {
             break;
          case 'r':
             rvalue = optarg;
-            break;
-         case 'c':
-            do_derivs = true;
             break;
          case '?':
             if(optopt == 'g') 
@@ -132,10 +107,6 @@ int main(int argc, char **argv) {
    if(!rvalue) {
       message_abort(cerr, "ERROR: Option -r not found");
    }
-   if(do_derivs) 
-      cout << "will calculate derivs\n";
-   else 
-      cout << "will not calculate derivs\n";
    stringstream(nvalue) >> nframes;
    stringstream(rvalue) >> reso;
    array<float, 3> resols;
@@ -161,6 +132,7 @@ int main(int argc, char **argv) {
 
 
    // read pdbs and construct density
+   //for(int num = 0; num  < nframes; ++num) {
    for(int num = world_rank; num  < nframes; num += world_size) {
       stringstream sspdb;
       sspdb << string(pvalue) <<'/'<< num << ".pdb";
@@ -182,21 +154,37 @@ int main(int argc, char **argv) {
       {
          double den = 0;
          for(size_t index = 0; index < pdb.getNatoms(); ++index) {
+            //array<float, 3> coord;
+            //array<float, 3> coord = pdb.getCoordinates(index);
+            //coord[0] = pdb.getX(index);
+            //coord[1] = pdb.getY(index);
+            //coord[2] = pdb.getZ(index);
+//            coord[0] = pdb.getX(index) - 79.63125133514404;
+//            coord[1] = pdb.getY(index) - 42.08624982833863;
+//            coord[2] = pdb.getZ(index) - 112.31375217437744;
+            //den += fsw3(pdb.pbcDistance(*grid_iter, coord), resols);
+            //Vector this_grid((*grid_iter)[0],(*grid_iter)[1],(*grid_iter)[2]);
+            //Vector pbc_dist = pdb.pbcDistance(this_grid, pdb.getCoordinates(index));
+            den += fsw3(
+                  //std::experimental::make_array(pbc_dist[0], pbc_dist[1], pbc_dist[2]),
+                  pdb.pbcDistance(*grid_iter, pdb.getCoordinates(index)),
+                  resols);
 
-            Vector derivs;
-            if(do_derivs) 
-               den += fsw3(
-                     pdb.pbcDistance(*grid_iter, pdb.getCoordinates(index)),
-                     resols, derivs);
-            else
-               den += fsw3(
-                     pdb.pbcDistance(*grid_iter, pdb.getCoordinates(index)),
-                     resols);
-
+//            if(grid_iter==grids.begin()+467) {
+//               //cout << coord[0] << endl;
+//               if(index==1) {
+//                  printf("%f %f %f\n%f %f %f\n",
+//                        coord[0], coord[1], coord[2],
+//                        (*grid_iter)[0],(*grid_iter)[1],(*grid_iter)[2]);
+//               }
+//               cout << den << endl;
+//            }
          }
          fsden << ' ' << setprecision(8) << den << '\n';
       }
       fsden.close();
+      //t2 = high_resolution_clock::now();
+      //cout << duration_cast<duration<double>>(t2-t1).count() << endl;
       
    }
 
