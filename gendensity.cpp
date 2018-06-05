@@ -1,4 +1,5 @@
 #include <iostream>
+#include <array>
 #include <string>
 #include <fstream>
 #include <sstream>
@@ -22,13 +23,17 @@ using namespace PDB_NS;
 void print_help(ostream& s) {
    s << "Usage:\n";
    s << "\tgendensity -g grid.xyz -p pdb_dir"<< 
-      " -d density_dir -r resolution -n nframes\n";
+      " -d density_dir -r resolution -n nframes [-t transform]\n";
+}
+
+void message_abort(ostream& s, string str, bool help) {
+   s << str << "\n";
+   if(help) print_help(s);
+   abort();
 }
 
 void message_abort(ostream& s, string str) {
-   s << str << "\n";
-   print_help(s);
-   abort();
+   message_abort(s, str, true);
 }
 
 //double fsw3(const array<float, 3>& dist, const array<float ,3>& resols) {
@@ -47,15 +52,29 @@ double fsw3(const T& dist, const S& resols) {
    return den;
 }
 
+// pos =  pos \cdot trans
+template <class T, class S>
+inline
+void transform(T& pos, const S& trans) {
+   auto pos_copy = pos;
+   pos[0] = 
+      pos_copy[0] * trans[0] + pos_copy[1] * trans[3] + pos_copy[2] * trans[6];
+   pos[1] = 
+      pos_copy[0] * trans[1] + pos_copy[1] * trans[4] + pos_copy[2] * trans[7];
+   pos[2] = 
+      pos_copy[0] * trans[2] + pos_copy[1] * trans[5] + pos_copy[2] * trans[8];
+}
+
 int main(int argc, char **argv) {
-   char *gvalue=NULL, *pvalue=NULL, *dvalue=NULL;
-   char *nvalue=NULL, *rvalue=NULL;
+   char *gvalue = NULL, *pvalue = NULL, *dvalue = NULL;
+   char *nvalue = NULL, *rvalue = NULL;
+   char *tvalue = NULL;
    int  nframes;
    float reso;
    
    opterr = 0;
    char argu_key;
-   while((argu_key = getopt(argc, argv,"g:p:d:n:r:")) != -1)
+   while((argu_key = getopt(argc, argv,"g:p:d:n:r:t:")) != -1)
       switch(argu_key) {
          case 'g':
             gvalue = optarg;
@@ -72,6 +91,9 @@ int main(int argc, char **argv) {
          case 'r':
             rvalue = optarg;
             break;
+         case 't':
+            tvalue = optarg;
+            break;
          case '?':
             if(optopt == 'g') 
                message_abort(cerr, "ERROR: Option -g requires an argument");
@@ -83,6 +105,8 @@ int main(int argc, char **argv) {
                message_abort(cerr, "ERROR: Option -n requires an argument");
             else if(optopt == 'r') 
                message_abort(cerr, "ERROR: Option -r requires an argument");
+            else if(optopt == 't') 
+               message_abort(cerr, "ERROR: Option -t requires an argument");
             else message_abort(cerr, "ERROR: Unknown option -"+ string(1,optopt));
             break;
          default:
@@ -114,6 +138,8 @@ int main(int argc, char **argv) {
    //vector<array<float, 3>> grids;
    vector<Vector> grids;
    ifstream fsgrid(gvalue);
+   if(!fsgrid.is_open())
+      message_abort(cerr, "ERROR: cannot open grid file", false);
    string line;
    while(getline(fsgrid, line)) {
       stringstream ss(line);
@@ -123,6 +149,66 @@ int main(int argc, char **argv) {
       grids.push_back(grid);
    }
 
+   /*--- if tvalue is set, then read transformation info ---*/
+   vector<vector<int> > transform_base;
+   // transform matrices stored in row major order
+   // atom position is considered to be a row vector
+   // thus new_position = old_position \cdot matrix
+   vector<array<double, 9> > transformations;
+   // number of transformations will act on atoms
+   unsigned ntransformations = 0;
+   // number of transformation types
+   unsigned ntranstypes = 0;
+   if(tvalue) {
+      /*--- read transform base ---*/
+      ifstream fs_transbase((string(tvalue) + ".base").c_str());
+      if(!fs_transbase.is_open())
+         message_abort(cerr, "ERROR: cannot open transform base", false);
+      string line;
+      while(getline(fs_transbase, line)) {
+         stringstream ss(line);
+         int tbase;
+         transform_base.push_back(vector<int>());
+         while(ss >> tbase) {
+            transform_base.back().push_back(tbase);
+         }
+         if(
+               transform_base[0].size() !=
+               transform_base.back().size()
+           ) {
+            cerr << "ERROR: inconsistent column numbers in "
+               << tvalue << ".base";
+            abort();
+         }
+      }
+      ntranstypes = transform_base[0].size();
+      ntransformations = transform_base.size();
+
+      /*--- read transformations ---*/
+      transformations.resize(ntranstypes);
+      for(unsigned i = 0; i < ntranstypes; ++i) {
+         ifstream fs_trans((string(tvalue) + to_string(i)).c_str());
+         if(!fs_trans.is_open()) {
+            string errmsg = string(tvalue) + to_string(i);
+            errmsg = "ERROR: cannot open " + errmsg;
+            message_abort(cerr, errmsg, false);
+         }
+         string line;
+         unsigned index_in_matrix;
+         double matrix_entry;
+         while(getline(fs_trans, line)) {
+            stringstream ss(line);
+            while(ss >> matrix_entry) {
+               transformations[i][index_in_matrix++] = matrix_entry;
+               if(index_in_matrix > 9) 
+                  cerr << "ERROR: 10th entry of a matrix is provided in "
+                     << tvalue << i;
+            }
+         }
+      }
+
+   } // end of if(tvalue)
+
    // intialize mpi
    MPI_Init(NULL, NULL);
    int world_size;
@@ -131,9 +217,9 @@ int main(int argc, char **argv) {
    MPI_Comm_rank(MPI_COMM_WORLD, &world_rank);
 
 
-   // read pdbs and construct density
-   //for(int num = 0; num  < nframes; ++num) {
+   /*--- read pdbs and construct density ---*/
    for(int num = world_rank; num  < nframes; num += world_size) {
+
       stringstream sspdb;
       sspdb << string(pvalue) <<'/'<< num << ".pdb";
       cout << sspdb.str() << endl;
@@ -142,53 +228,79 @@ int main(int argc, char **argv) {
       PDB pdb(sspdb.str());
       //auto t2 = high_resolution_clock::now();
       //cout << duration_cast<duration<double>>(t2-t1).count() << endl;
-      // construct density
-      stringstream ssden;
-      ssden << string(dvalue) <<'/'<< num <<".dat";
-      ofstream fsden(ssden.str());
-      //write the header of COLVAR
-      fsden << "#! FIELDS density" << endl;
-      fsden << fixed;
-      //t1 = high_resolution_clock::now();
-      for(auto grid_iter = grids.begin(); grid_iter != grids.end(); ++grid_iter)
-      {
-         double den = 0;
-         for(size_t index = 0; index < pdb.getNatoms(); ++index) {
-            //array<float, 3> coord;
-            //array<float, 3> coord = pdb.getCoordinates(index);
-            //coord[0] = pdb.getX(index);
-            //coord[1] = pdb.getY(index);
-            //coord[2] = pdb.getZ(index);
-//            coord[0] = pdb.getX(index) - 79.63125133514404;
-//            coord[1] = pdb.getY(index) - 42.08624982833863;
-//            coord[2] = pdb.getZ(index) - 112.31375217437744;
-            //den += fsw3(pdb.pbcDistance(*grid_iter, coord), resols);
-            //Vector this_grid((*grid_iter)[0],(*grid_iter)[1],(*grid_iter)[2]);
-            //Vector pbc_dist = pdb.pbcDistance(this_grid, pdb.getCoordinates(index));
-            den += fsw3(
-                  //std::experimental::make_array(pbc_dist[0], pbc_dist[1], pbc_dist[2]),
-                  pdb.pbcDistance(*grid_iter, pdb.getCoordinates(index)),
-                  resols);
-
-//            if(grid_iter==grids.begin()+467) {
-//               //cout << coord[0] << endl;
-//               if(index==1) {
-//                  printf("%f %f %f\n%f %f %f\n",
-//                        coord[0], coord[1], coord[2],
-//                        (*grid_iter)[0],(*grid_iter)[1],(*grid_iter)[2]);
-//               }
-//               cout << den << endl;
-//            }
-         }
-         fsden << ' ' << setprecision(8) << den << '\n';
-      }
-      fsden.close();
-      //t2 = high_resolution_clock::now();
-      //cout << duration_cast<duration<double>>(t2-t1).count() << endl;
       
-   }
+      /*--- construct density ---*/
+      stringstream ssden;
+      // will be the file name of the generated den
+      unsigned index_den_start = num;
+      unsigned index_den_end = num + 1;
+      if(tvalue) {
+         index_den_start *= ntransformations;
+         index_den_end *= ntransformations;
+      }
+      for(unsigned index_den = index_den_start; 
+            index_den < index_den_end; ++ index_den) 
+      {
+         ssden << string(dvalue) <<'/'<< index_den <<".dat";
+         ofstream fsden(ssden.str());
+         if(!fsden.is_open()) {
+            string errmsg = 
+               string(dvalue) + '/' + to_string(index_den) + ".dat";
+            errmsg = "ERROR: cannot open " + errmsg;
+            message_abort(cerr, errmsg, false);
+         }
 
-   // finialize MPI
+         fsden << "#! FIELDS density" << endl;
+         fsden << fixed;
+         //t1 = high_resolution_clock::now();
+         
+         for(auto grid_iter = grids.begin(); 
+               grid_iter != grids.end(); ++grid_iter)
+         {
+            double den = 0;
+            for(size_t index = 0; index < pdb.getNatoms(); ++index) {
+
+               // the position of atom index
+               auto pos = pdb.getCoordinates(index);
+
+               /*--- do the transformations if any ---*/
+               if(tvalue) {
+                  for(int num_trans : 
+                        transform_base[index_den - index_den_start])
+                     for(int i_trans = 0; i_trans < num_trans; ++i_trans) {
+                        transform(pos, 
+                              transformations[index_den - index_den_start]);
+                     }
+               }
+
+               den += fsw3(
+                     pdb.pbcDistance(*grid_iter, pos), resols);
+
+//               if(grid_iter==grids.begin()+467) {
+//                  //cout << coord[0] << endl;
+//                  if(index==1) {
+//                     printf("%f %f %f\n%f %f %f\n",
+//                           coord[0], coord[1], coord[2],
+//                           (*grid_iter)[0],(*grid_iter)[1],(*grid_iter)[2]);
+//                  }
+//                  cout << den << endl;
+//               }
+
+            }
+            fsden << ' ' << setprecision(8) << den << '\n';
+         }
+
+         fsden.close();
+
+         //t2 = high_resolution_clock::now();
+         //cout << duration_cast<duration<double>>(t2-t1).count() << endl;
+         
+      } // end of loop in transformations
+      
+   } // end of mpi loop in pdbs
+
    MPI_Finalize();
+
+   return 0;
    
 }
