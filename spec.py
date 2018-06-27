@@ -1,5 +1,6 @@
 from read_colvar import *
 from autocorrelate import *
+from scipy import fftpack
 
 boxsize = 19.3887
 
@@ -34,11 +35,16 @@ def do_spec(string):
               autocorrelate(vdy - vy) + \
               autocorrelate(vdz - vz) 
     n = int(len(vc) * 0.01)
-    vf = np.real(np.fft.fft(vc[:n]))
-    vf_cross = np.real(np.fft.fft(vc_cross[:n]))
-    vf_rest = np.real(np.fft.fft(vc_rest[:n]))
+    #vf = np.real(np.fft.fft(vc[:n]))
+    #vf_cross = np.real(np.fft.fft(vc_cross[:n]))
+    #vf_rest = np.real(np.fft.fft(vc_rest[:n]))
+    #freq = np.fft.fftfreq(n, d = 0.5)
+    #wn = 33356.40952 * freq
+    vf = fftpack.dct(vc[:n])
+    vf_cross = fftpack.dct(vc_cross[:n])
+    vf_rest = fftpack.dct(vc_rest[:n])
     freq = np.fft.fftfreq(n, d = 0.5)
-    wn = 33356.40952 * freq
+    wn = 33356.40952 * freq / 2.0
     return [vc, wn, vf, vf_cross, vf_rest]
 
 df = read_colvar("COLVAR")
