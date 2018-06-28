@@ -103,6 +103,8 @@ while(<STDIN>) {
                 if($resnames[$i] eq $resname_in_pdb or $resnames[$i] eq $resname_in_pdb."P") {
                     if($resids[$i] eq $resid_in_pdb) {
                         if($segnames[$i] eq $segname_in_pdb) {
+                            # make map_from_resname_to_kernerl_number work for GLUP ASPP ...:
+                            $resname_in_pdb=$resnames[$i];
                             #IF HIT PERFECTLY
                             if($line_in_pdb[2] eq "N" and $is_residue_start==0) {
                                 $is_residue_start=1;
@@ -112,7 +114,6 @@ while(<STDIN>) {
 		                        print TOP sprintf "$atom_index_in_pdb\t%d\t%d\n",$map_from_resname_to_kernerl_number{$resname_in_pdb},$atom_index_in_pdb-$head_index+1;
                               $is_residue_end=1;
                             }
-                            $resname_in_pdb=$resnames[$i];#handle with GLUP ASPP ..
                             $is_evb=1;
 			    last;
                         }
