@@ -68,17 +68,17 @@ proc draw_path {mol path_file {color orange} {radius 0.2} {resolution 10}} {
 }
 
 # http://www.ks.uiuc.edu/Training/Tutorials/vmd-imgmv/imgmv/tutorial-html/node3.html
-proc enabletrace {} {
+proc enable_trace_path {} {
    global vmd_frame
-   trace variable vmd_frame(0) w drawcounter
+   trace variable vmd_frame(0) w draw_path_counter
 }
 
-proc disabletrace {} {
+proc disable_trace_path {} {
    global vmd_frame
-   trace vdelete vmd_frame(0) w drawcounter
+   trace vdelete vmd_frame(0) w draw_path_counter
 }
 
-proc drawcounter { name element op } {
+proc draw_path_counter { name element op } {
    global vmd_frame
    global path_dat
    graphics 0 delete all
@@ -96,6 +96,8 @@ proc drawcounter { name element op } {
       incr linecount
    }
 }
+
+proc show_atom_counter {} {}
 
 proc draw_texts {mol text_file {size 1.4} {thickness 2.8}} {
    set fp [open $text_file r]
@@ -134,4 +136,48 @@ proc draw_arrows {mol arrow_file {color red} {radius1 0.1} {radius2 0.15}} {
       set end [vecadd $start $v]
       draw_arrow $mol $start $end $color $radius1 $radius2
    }
+}
+
+# write id(serial) type mol(resid) x y z vx vy vz
+proc write_lammpstrj {sel file_name {timestep 0}} {
+   set ids [$sel get serial]
+   set types [$sel get type]
+   set mols [$sel get resid]
+   set xs [$sel get x]
+   set ys [$sel get y]
+   set zs [$sel get z]
+   set vxs [$sel get vx]
+   set vys [$sel get vy]
+   set vzs [$sel get vz]
+   set fp [open $file_name w]
+   puts $fp "ITEM: TIMESTEP"
+   puts $fp $timestep
+   puts $fp "ITEM: NUMBER OF ATOMS"
+   set natoms [$sel num]
+   puts $fp $natoms
+   puts $fp "ITEM: BOX BOUNDS pp pp pp"
+   set center [geo_center $sel]
+   set box {}
+   lappend box [lindex [pbc get -namd] 0 0 0]
+   lappend box [lindex [pbc get -namd] 0 1 1]
+   lappend box [lindex [pbc get -namd] 0 2 2]
+   set lo [vecsub $center [vecscale 0.5 $box]]
+   set hi [vecadd $center [vecscale 0.5 $box]]
+   for {set i 0} {$i < 3} {incr i} {
+      puts -nonewline $fp "[lindex $lo $i] "
+      puts $fp [lindex $hi $i]
+   }
+   puts $fp "ITEM: ATOMS id type mol x y z vx vy vz"
+   for {set i 0} {$i < $natoms} {incr i} {
+      puts -nonewline $fp "[lindex $ids $i] "
+      puts -nonewline $fp "[lindex $types $i] "
+      puts -nonewline $fp "[lindex $mols $i] "
+      puts -nonewline $fp "[lindex $xs $i] "
+      puts -nonewline $fp "[lindex $ys $i] "
+      puts -nonewline $fp "[lindex $zs $i] "
+      puts -nonewline $fp "[lindex $vxs $i] "
+      puts -nonewline $fp "[lindex $vys $i] "
+      puts $fp [lindex $vzs $i]
+   }
+   close $fp
 }
