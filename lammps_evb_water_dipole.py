@@ -14,6 +14,8 @@ def parse():
     parser.add_argument('evb_out', help = 'input evb.out')
     parser.add_argument('lammpstrj', help = 'input trj(s)')
     parser.add_argument('dipole_out', help = 'output file')
+    parser.add_argument('--charge_trj', help = 'output charge trj',
+            default = None)
     parser.add_argument('--q_water_o', help = 'water oxygen charge',
             default = -0.82)
     parser.add_argument('--q_water_h', help = 'water hydrogen charge',
@@ -62,6 +64,9 @@ if __name__=='__main__':
     evb_time_trj = evb.time_trj.tolist()
     print("evb_out read")
 
+    if args.charge_trj:
+        fp_ctrj = open(args.charge_trj, 'w')
+
     # I don't know why Pizza.py used 'rb' when reading in next()
     # here I just manually do partial work in read_all()
     # and compute dipole on the fly of reading
@@ -84,6 +89,7 @@ if __name__=='__main__':
             dipole = np.zeros(3)
             box = make_box(snap)
 
+            idd = d.names['id']
             q = d.names['q']
             x = d.names['x']
             y = d.names['y']
@@ -141,6 +147,8 @@ if __name__=='__main__':
                             type_h.index(int(snap.atoms[iatom, typ]))
                             charges[iatom] += eig**2 * q_hyd_h
                             weights[iatom] += eig**2
+                            #if snap.time == 422 and abs(snap.atoms[iatom, idd]-11) < 0.1:
+                            #    print(charges[iatom], weights[iatom], eig**2)
                             # modify the charges of hydronium in trj
                             snap.atoms[iatom, q] = q_water_h
                         except ValueError:
@@ -148,6 +156,8 @@ if __name__=='__main__':
                                 type_o.index(int(snap.atoms[iatom, typ]))
                                 charges[iatom] += eig**2 * q_hyd_o
                                 weights[iatom] += eig**2
+                                #if snap.time == 422 and abs(snap.atoms[iatom, idd]-11) < 0.1:
+                                #    print(charges[iatom], weights[iatom], eig**2)
                                 # modify the charges of hydronium in trj
                                 snap.atoms[iatom, q] = q_water_o
                             except ValueError:
@@ -164,11 +174,15 @@ if __name__=='__main__':
                             type_h.index(int(snap.atoms[iatom, typ]))
                             charges[iatom] += eig**2 * q_hyd_h
                             weights[iatom] += eig**2
+                            #if snap.time == 422 and abs(snap.atoms[iatom, idd]-11) < 0.1:
+                            #    print(charges[iatom], weights[iatom], eig**2)
                         except ValueError:
                             try:
                                 type_o.index(int(snap.atoms[iatom, typ]))
                                 charges[iatom] += eig**2 * q_hyd_o
                                 weights[iatom] += eig**2
+                                #if snap.time == 422 and abs(snap.atoms[iatom, idd]-11) < 0.1:
+                                #    print(charges[iatom], weights[iatom], eig**2)
                                 oxygen_iatom = iatom
                             except ValueError:
                                 raise Exception(
@@ -194,14 +208,25 @@ if __name__=='__main__':
 
                     charges[third_h_iatom] += eig**2 * q_hyd_h
                     weights[third_h_iatom] += eig**2
+                    #if snap.time == 422 and abs(snap.atoms[iatom, idd]-11) < 0.1:
+                    #    print(charges[iatom], weights[iatom], eig**2)
 
             # finalize the charges
             total_charge = 0.0
             for iatom in range(natoms):
                 charges[iatom] += snap.atoms[iatom, q] * (1.0 - weights[iatom])
+                #if snap.time == 422 and abs(snap.atoms[iatom, idd]-11) < 0.1:
+                #    print(charges[iatom], weights[iatom])
                 total_charge += charges[iatom]
             if abs(total_charge) > 1e-4:
                 print("WARNING: total charge != 0 at timestep %d"%snap.time)
+            if args.charge_trj:
+                print(" TIMESTEP{:12d}".format(snap.time), file = fp_ctrj)
+                indexes = np.argsort(snap.atoms[:, idd])
+                for iatom in indexes:
+                    print("{:4d}{:10.4f}".\
+                            format(int(snap.atoms[iatom, idd]), charges[iatom]),
+                            file = fp_ctrj)
 
             # q * x = dipole
             for molid, atomids in molid2atomids.items():
@@ -226,3 +251,4 @@ if __name__=='__main__':
             snap = d.read_snapshot(f)
 
     f.close()
+    if args.charge_trj: fp_ctrj.close()
