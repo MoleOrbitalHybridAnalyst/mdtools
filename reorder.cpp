@@ -4,7 +4,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <unistd.h>
-#include "pdb/pdb.h"
+#include "pdb.h"
 using namespace std;
 using namespace PDB_NS;
 

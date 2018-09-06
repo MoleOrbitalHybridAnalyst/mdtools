@@ -119,7 +119,7 @@ proc draw_texts {mol text_file {size 1.4} {thickness 2.8}} {
    }
 }
 
-proc draw_arrows {mol arrow_file {color red} {radius1 0.1} {radius2 0.15}} {
+proc draw_arrows_u_serials {mol arrow_file {color red} {radius1 0.1} {radius2 0.15}} {
    set fp [open $arrow_file r]
    set arrow_filedat [read $fp]
    close $fp
@@ -133,6 +133,27 @@ proc draw_arrows {mol arrow_file {color red} {radius1 0.1} {radius2 0.15}} {
       set v [lindex $splits 1]
       lappend v [lindex $splits 2]
       lappend v [lindex $splits 3]
+      set end [vecadd $start $v]
+      draw_arrow $mol $start $end $color $radius1 $radius2
+   }
+}
+
+proc draw_arrows_u_coords {mol arrow_file {color red} {radius1 0.1} {radius2 0.15}} {
+   set fp [open $arrow_file r]
+   set arrow_filedat [read $fp]
+   close $fp
+   set arrow_dat [split $arrow_filedat "\n"]
+   foreach line $arrow_dat {
+      if {[expr {$line eq ""}]} {
+         continue
+      }
+      set splits [split $line]
+      set start [lindex $splits 0]
+      lappend start [lindex $splits 1]
+      lappend start [lindex $splits 2]
+      set v [lindex $splits 3]
+      lappend v [lindex $splits 4]
+      lappend v [lindex $splits 5]
       set end [vecadd $start $v]
       draw_arrow $mol $start $end $color $radius1 $radius2
    }
