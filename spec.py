@@ -3,6 +3,7 @@ from autocorrelate import *
 from scipy import fftpack
 
 boxsize = 19.3887
+#boxsize = 15.66035
 do_dipole = False
 
 def pbc(x):
@@ -19,6 +20,7 @@ def do_spec(string):
     vx = np.vectorize(pbc)(vx)
     vy = np.vectorize(pbc)(vy)
     vz = np.vectorize(pbc)(vz)
+    np.savetxt(string + "_velocity.dat", np.transpose([vx, vy, vz]))
     if do_dipole:
         dx = df_dipole.dx.values[:len(x)] 
         dy = df_dipole.dy.values[:len(x)]
