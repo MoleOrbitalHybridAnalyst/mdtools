@@ -263,7 +263,7 @@ proc write_lammpstrj {sel file_name {timestep 0}} {
 }
 
 # why does not measure have this kind of thing ?
-proc measure_distances {sel0 sel1} {
+proc measure_distances {sel0 sel1 {frame ""} } {
    set l0 [$sel0 list]
    set l1 [$sel1 list]
    set distances {}
@@ -271,7 +271,11 @@ proc measure_distances {sel0 sel1} {
       foreach i1 $l1 {
          set pair $i0
          lappend pair $i1
-         lappend distances [measure bond $pair]
+         if {$frame eq ""} {
+            lappend distances [measure bond $pair]
+         } else {
+            lappend distances [measure bond $pair frame $frame]
+         }
       }
    }
    return $distances
