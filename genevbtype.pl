@@ -183,7 +183,7 @@ if($glu_flag){
 if($asp_flag){
         my $helping_scalar=$all_the_atoms_involved{"ASP"};                   
         $helping_scalar=~s/(CC)|(OC)/ /g;                                    
-        $all_the_atoms_involved{"ASPP"}=$all_the_atoms_involved{"ASP"}." ".$helping_scalar;
+        $all_the_atoms_involved{"ASPP"}=$all_the_atoms_involved{"ASPP"}." ".$helping_scalar;
         my @helping_array=split ' ',$all_the_atoms_involved{"ASPP"};
         my %helping_hash=qw{};
         for(@helping_array) {$helping_hash{$_}=1;}
