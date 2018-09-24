@@ -3,15 +3,21 @@
     compute/retrieve position dependent diffusion constants and mftp
 """
 
+import re
 import argparse
 import numpy as np
+from sys import stderr
+from scipy.optimize import curve_fit
+from numpy import sin,cos,exp
+
 from read_colvar import *
-import re
 from autocorrelate import *
 
 def parse():
 
-    parser = argparse.ArgumentParser()
+    #parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser( \
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
     parser.add_argument('--metafile', \
             help = 'input metafile (probably the one used in WHAM)')
@@ -22,11 +28,29 @@ def parse():
 
     parser.add_argument('--dfs_profile', help = 'input/output diffusion file')
     parser.add_argument('--save_acfs', action = 'store_true', \
-            help = 'whether save acfs')
+            help = 'whether to save acfs')
     parser.add_argument('--acf_prefix', default = 'acf', \
-            help = 'prefix of acfs files')
-    parser.add_argument('--acf_ratio', default = 0.2, \
+            help = 'prefix of acf files')
+    parser.add_argument('--acf_ratio', default = 0.01, \
             help = 'ratio of acf to do integration')
+    parser.add_argument('--fit_acf', action = 'store_true', \
+            help = 'fit acf before doing integration')
+    parser.add_argument('--fit_function', \
+            default = dft_fit_function, \
+            help = 'functional form to be fitted')
+    parser.add_argument('--time_name', \
+            default = dft_time_name, \
+            help = 'variable name of time in fit_function')
+    parser.add_argument('--parameter_names', \
+            default = dft_parameter_names, \
+            help = 'parameter names to be fitted')
+    parser.add_argument('--initial_parameters', \
+            default = dft_initial_parameters, \
+            help = 'parameter names to be fitted')
+    parser.add_argument('--save_fitted_acfs', action = 'store_true', \
+            help = 'whether to save fitted acfs')
+    parser.add_argument('--fitted_acf_prefix', default = 'fitted_acf', \
+            help = 'prefix of fitted acf files')
 
     parser.add_argument('--compute_resistivity', action = 'store_true', \
             help = 'whether to compute resistivity')
@@ -59,6 +83,10 @@ def parse():
 
 if __name__ == "__main__":
 
+    dft_fit_function = 'a1*exp(-t**2/b1)+a2*exp(-t**2/b2)'
+    dft_time_name = 't'
+    dft_parameter_names = 'a1,b1,a2,b2'
+    dft_initial_parameters = '0.5,0.01,0.5,0.01'
     args = parse()
 
     # read meta file
@@ -76,8 +104,12 @@ if __name__ == "__main__":
     elif args.dfs_profile is not None:
         already_has_dfs = True
         tmp = np.loadtxt(args.dfs_profile)
-        window_centers = tmp[:, 0]
-        dfs = tmp[:, 1]
+        if len(tmp.shape) == 1:
+            window_centers = [tmp[0]]
+            dfs = [tmp[1]]
+        else:
+            window_centers = tmp[:, 0]
+            dfs = tmp[:, 1]
     else:
         raise Exception("No metafile or dfs_profile inputted")
 
@@ -86,6 +118,9 @@ if __name__ == "__main__":
         print("Turn on verbose since no resistivity" \
                 " or rate constant to be computed")
         args.verbose = True
+    if args.save_fitted_acfs and not args.fit_acf:
+        args.fit_acf = True
+        print("Turn on fit_acf as save_fitted_acfs is demanded")
 
     # compute diffusion constants
     if args.verbose: print("Diffusion Constants:")
@@ -115,11 +150,52 @@ if __name__ == "__main__":
                 np.savetxt(args.acf_prefix + '_' + str(wc), \
                         np.transpose([colvar_data[:, 0], acf]))
 
-            # compute diffusion constants from acf and var
+            # do fitting
             n = int(float(args.acf_ratio) * len(colvar_data))
+            if args.fit_acf:
+                if args.fit_function != dft_fit_function:
+                    if args.time_name == dft_time_name and \
+                       args.parameter_names == dft_parameter_names and \
+                       args.initial_parameters == dft_initial_parameters:
+                           print('WARNING: you specified fit_function', \
+                                 'but did not touch other fit settings', \
+                                 file = stderr)
+                # define the function to be fitted
+                func_string = 'def func(' + args.time_name + ','
+                func_string += args.parameter_names
+                func_string += '): return ' + args.fit_function
+                exec(func_string)
+
+                p0 = np.vectorize(float)(args.initial_parameters.split(','))
+                popt, pcov = curve_fit(func, \
+                        colvar_data[:n, 0], acf[:n], p0 = p0)
+
+                acf_ = np.array([func(_, *popt) for _ in colvar_data[:, 0]])
+                aa = acf_[1:] + acf_[:-1]
+                if args.save_fitted_acfs:
+                    header = 'functional form:\n'
+                    header += '  ' + args.fit_function + '\n'
+                    header += 'parameters to be fitted:\n'
+                    header += '  ' + args.parameter_names + '\n'
+                    header += 'fitted parameters:\n'
+                    header += '  ' + ','.join(np.vectorize(str)(popt)) + '\n'
+                    header += 'covariance matrix:\n'
+                    for row in pcov:
+                        header += '  ' + \
+                                ','.join(np.vectorize(str)(row)) + '\n'
+                    np.savetxt(args.fitted_acf_prefix + '_' + str(wc), \
+                            np.transpose([colvar_data[:, 0], acf_]), \
+                            header = header)
+            else:
+                aa = acf[1:] + acf[:-1]
+
+            # compute diffusion constants from acf and var
             dt = colvar_data[1:, 0] - colvar_data[:-1, 0]
-            aa = acf[1:] + acf[:-1]
-            integ = sum(dt[:n] * aa[:n]) / 2.0
+            if args.fit_acf:
+                # do integ of fitted acf on full range
+                integ = sum(dt * aa) / 2.0
+            else:
+                integ = sum(dt[:n] * aa[:n]) / 2.0
             dfs.append(var**2 / integ)
             if args.verbose:
                 print(wc, dfs[-1])
