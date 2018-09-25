@@ -46,10 +46,17 @@ for my $icol (0..$#cols) {
       }
    }
    $ave /= $i;
+   my $var = 0.0;
+   for my $j (1..$i) {
+      my $value = $values[$j][$icol];
+      $var += ($value - $ave) ** 2;
+   }
+   $var /= $i;
    print "column $icol:\n";
    print "max = $max at line $argmax\n";
    print "min = $min at line $argmin\n";
    print "absmax = $absmax at line $argabsmax\n";
    print "absmin = $absmin at line $argabsmin\n";
    print "average = $ave\n";
+   print "variance (dof = 0)  = $var\n";
 }
