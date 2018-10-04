@@ -68,6 +68,22 @@ proc draw_path {mol path_file {color orange} {radius 0.2} {resolution 10}} {
    }
 }
 
+proc draw_path_w_cen {mol cen path_offset_file {color orange} {radius 0.2} {resolution 10}} {
+   set fp [open $path_offset_file r]
+   set path_offset_filedat [read $fp]
+   close $fp
+   graphics $mol color $color
+   set path_offset_dat [split $path_offset_filedat "\n"]
+   foreach line $path_offset_dat {
+      if {[expr {$line eq ""}]} {
+         continue
+      }
+      set splits [split $line]
+      set offset [list [lindex $splits 0] [lindex $splits 1] [lindex $splits 2]]
+      graphics $mol sphere [vecadd $cen $offset] radius $radius resolution $resolution
+   }
+}
+
 # http://www.ks.uiuc.edu/Training/Tutorials/vmd-imgmv/imgmv/tutorial-html/node3.html
 proc enable_trace_path {} {
    global vmd_frame

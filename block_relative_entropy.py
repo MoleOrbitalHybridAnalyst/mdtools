@@ -19,7 +19,7 @@ def parse():
             help = 'input colvar name')
     parser.add_argument('-c', '--cv_column', default = 1, \
             help = 'input colvar column')
-    parser.add_argument('-n', '--nblocks', default = 10, \
+    parser.add_argument('-b', '--nblocks', default = 10, \
             help = 'number of blocks the input will be split into')
     parser.add_argument('-w','--width', \
             help='width of bins', required = True)
@@ -40,7 +40,8 @@ def make_histo(array, binsize, ratio, min_max = None):
     histo = np.zeros(nbins)
     for a in array:
         histo[int((a-min_)/width)] += 1 
-    return [histo, min_max]
+    total = sum(histo)
+    return [histo / total, min_max]
 
 def relative_entropy(dist1, dist2, epsilon):
     """
@@ -57,6 +58,8 @@ def relative_entropy(dist1, dist2, epsilon):
     return result
 
 if __name__=="__main__":
+
+    debug = 0
 
     args = parse()
 
@@ -92,6 +95,9 @@ if __name__=="__main__":
         print('width should be positive', file = stderr); exit()
 
     full_histo, full_min_max = make_histo(time_series, width, ratio)
+    if debug:
+        print("full_histo")
+        print(full_histo)
 
     try:
         nblocks = int(args.nblocks)
@@ -108,6 +114,9 @@ if __name__=="__main__":
     for iblock in range(nblocks):
         lo = iblock * block_size
         hi = (iblock + 1) * block_size
-        histo, =  \
-        make_histo(time_series[lo, hi], width, ratio, min_max = full_min_max)
+        histo, junk =  \
+            make_histo(time_series[lo:hi], width, ratio, min_max = full_min_max)
+        if debug:
+            print("histo",iblock)
+            print(histo)
         print(iblock, relative_entropy(full_histo, histo, epsilon))

@@ -6,17 +6,17 @@ mol modselect 1 0 protein
 mol modstyle 1 0 NewCartoon
 mol showrep 0 1 off
 mol addrep 0
-mol modselect 2 0 resid 36 37 137 33 418 and protein
+mol modselect 2 0 residue 27 28 128 24 409 and protein
 mol modstyle 2 0 Licorice
 mol addrep 0
-mol modselect 3 0 resid 44 311 79 40 41 and protein
+mol modselect 3 0 residue 35 302 70 31 32 and protein
 mol modstyle 3 0 Licorice
 mol addrep 0
-mol modselect 4 0 (water and within 9 of (protein and resid 33)) or (water and within 4 of (protein and resid 141))
+mol modselect 4 0 (water and within 9 of (protein and residue 24)) or (water and within 4 of (protein and residue 132))
 mol modstyle 4 0 VDW
 mol selupdate 4 0 1
 mol addrep 0
-mol modselect 5 0 (water and within 9 of (protein and resid 33)) or (water and within 4 of (protein and resid 141))
+mol modselect 5 0 (water and within 9 of (protein and residue 24)) or (water and within 4 of (protein and residue 132))
 mol modstyle 5 0 DynamicBonds
 mol selupdate 5 0 1
 ###mol addrep 0
