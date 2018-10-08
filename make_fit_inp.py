@@ -15,7 +15,7 @@ def parse():
     parser.add_argument('-b',
             help = 'input fit.best', required = True)
     parser.add_argument('-o',
-            help = 'output fit.inp', required = True)
+            help = 'output fit.inp')
     parser.add_argument('-k',
             help = 'field to be fitted', required = True)
     parser.add_argument('-i', default = 'fixed',
@@ -31,13 +31,16 @@ if __name__=="__main__":
     fit_best = np.loadtxt(args.b)
 
     fp_inp = open(args.f)
-    fp_out = open(args.o, 'w')
+    if args.o:
+      fp_out = open(args.o, 'w')
 
     indx = 0
     for line in fp_inp:
 
         if re.match("FIT", line):
-            print(line, end = '', file = fp_out)
+            if args.o:
+               print(line, end = '', file = fp_out)
+            print(line, end = '')
 
             # check if this to be fitted
             keywords = line.split()[1:]
@@ -51,17 +54,23 @@ if __name__=="__main__":
                         to_be_fitted = True
 
         elif re.match("\s+$", line):
-            print(line, end = '', file = fp_out)
+            if args.o:
+               print(line, end = '', file = fp_out)
         else:
             if to_be_fitted and not re.match(".+" + args.i, line):
-                print(fit_best[indx] / 2, fit_best[indx] * 2, \
-                        file = fp_out, end = ' ')
+                if args.o:
+                  print(fit_best[indx] / 2, fit_best[indx] * 2, \
+                          file = fp_out, end = ' ')
             else:
-                print(fit_best[indx], fit_best[indx], \
-                        file = fp_out, end = ' ')
+                if args.o:
+                  print(fit_best[indx], fit_best[indx], \
+                          file = fp_out, end = ' ')
             pos_comment = line.index(':')
-            print(line[pos_comment:], end = '', file = fp_out)
+            if args.o:
+               print(line[pos_comment:], end = '', file = fp_out)
+            print(fit_best[indx], ':', line, end = '')
             indx += 1
 
     fp_inp.close()
-    fp_out.close()
+    if args.o:
+      fp_out.close()
