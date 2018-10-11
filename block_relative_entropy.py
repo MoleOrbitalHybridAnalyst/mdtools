@@ -30,16 +30,20 @@ def parse():
     return parser.parse_args()
 
 def make_histo(array, binsize, ratio, min_max = None):
+    mask = np.isfinite(array)
+    array = array[mask]
     if min_max is None:
         min_ = min(array); max_ = max(array)
         extend = (max_ - min_) * ratio / 2.0
         min_ -= extend; max_ += extend
         min_max = [min_, max_]
     min_ = min_max[0]; max_ = min_max[1]
-    nbins = int((max_ - min_) / binsize)
+    if debug:
+        print('min =', min_, 'max =', max_)
+    nbins = int(round((max_ - min_) / binsize))
     histo = np.zeros(nbins)
     for a in array:
-        histo[int((a-min_)/width)] += 1 
+        histo[min(int((a-min_)/width),nbins-1)] += 1 
     total = sum(histo)
     return [histo / total, min_max]
 
