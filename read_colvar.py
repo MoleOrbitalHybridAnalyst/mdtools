@@ -19,15 +19,22 @@ def print_header(df, stream=sys.stdout):
     header = "#! FIELDS " + " ".join(df.columns)
     print(header, file=stream)
 
-def print_colvar(df, stream=sys.stdout):
-    for index, row in df.iterrows():
-        [print(" %8f"%row[_], end='', file=stream) for _ in df.columns]
-        print("", file=stream)
+def print_colvar(df, stream=sys.stdout, dtype = float):
+    if dtype == float:
+        for index, row in df.iterrows():
+            [print(" %8f"%row[_], end='', file=stream) for _ in df.columns]
+            print("", file=stream)
+    elif dtype == str:
+        for index, row in df.iterrows():
+            [print(" %s"%row[_], end='', file=stream) for _ in df.columns]
+            print("", file=stream)
+    else:
+        raise Exception('unsupported type ' + dtype.__name__)
     
-def to_colvar(df, fname):
+def to_colvar(df, fname, dtype = float):
     with open(fname, "w") as fp:
         print_header(df, fp)
-        print_colvar(df, fp)
+        print_colvar(df, fp, dtype = dtype)
 
 setattr(pd.DataFrame, "print_columns", print_columns)
 setattr(pd.DataFrame, "print_header", print_header)
