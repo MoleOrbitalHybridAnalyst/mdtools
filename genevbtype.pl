@@ -9,6 +9,9 @@
 #A:read evb.par file one time and then write to evb.type. when reading evb.par .construct an hash of strings, which maps from molecule name to a string "atoms \n bonds\n ...". define global arrays @atoms_in_evbpar,@bonds_in_evbpar..., and def a subrutine to read such a string then construct these global arrays , sub construct_atoms_etc_from_string
 #Q:How to change the orders of bond, angle, dihedral,improper in data file so that they are consistent with the evb.par?
 #A:generate evb.top by genevbtop.pl first then read it to know what the indexes of  atoms involved in evb(kernel number!=0 and not water, hydronium) and read evb.cfg to now the kernel name. assume the evb.top and evb.par has the same atom order, then we also know what the types of these atoms from evb.par(determined by the third column in evb.top). (data structure: a global hash mapping from evb atom indexes to the kernel number , a hash from indexes to  the types, these two hashes may not be too long because evb molecules in a system is not too many).then loop for all the bonds, when the indexes involved are those evb atoms(check the existency in either the two hashes), look into the  molecule section about that molecule(call construct_atoms_etc_from_string to update the @bonds).loop in @bonds to check which bond is actually involved(do regex twice),get the order of the bond in evb.par(which of the two terminals is larger), if the order in data is the same do nothing, otherwise inverse. loop for angles,dih,impro.
+# Notes:
+# in molecule template section of evb.type, the order of atoms of a bond/angle/... should be consistent with its type_name
+# eg. 1 2 3 4 DIH_NH1_H_CT1_HB1 instead 4 3 2 1 DIH_HB1_CT1_H_NH1
 use File::Basename;
 use warnings;
 $debug=1;$glu_flag=1;$asp_flag=1;
@@ -183,6 +186,8 @@ if($glu_flag){
 if($asp_flag){
         my $helping_scalar=$all_the_atoms_involved{"ASP"};                   
         $helping_scalar=~s/(CC)|(OC)/ /g;                                    
+        # aspp used CT2 instead of CT2A !!!
+        $helping_scalar=~s/CT2A/CT2/g;                                    
         $all_the_atoms_involved{"ASPP"}=$all_the_atoms_involved{"ASPP"}." ".$helping_scalar;
         my @helping_array=split ' ',$all_the_atoms_involved{"ASPP"};
         my %helping_hash=qw{};
