@@ -1,5 +1,6 @@
 # TODO data-dependent kernel function
 # Ozertem, U. Locally Defined Principal Curves and Surfaces; 2011; Vol. 12.
+# https://www.stat.washington.edu/~jmcq/539_Report_James_McQueen.pdf
 import numpy as np
 
 class KDE:
@@ -70,7 +71,18 @@ class KDE:
         return self.H
 
     def mean_shift(self, x): 
-        self.m = np.dot(self.c, self.X) / self.p / self.N
+        #self.m = np.dot(self.c, self.X) / self.p / self.N
+        self.m = np.dot(self.c, self.X) / self.p / self.N - x
+        return self.m
+
+    def shift2converge(self, x, epsilon = 0.0001):
+        self.m = x
+        dev = 1.0
+        while dev > epsilon:
+            prev_m = self.m
+            self.estimate(self.m)
+            self.m = self.mean_shift(self.m)
+            dev = sum((prev_m - self.m)**2)
         return self.m
 
 class SCMS:
@@ -90,7 +102,6 @@ class SCMS:
         measure_orthogonality():
             compute |g^T \cdot V^T g| / (|g|\dot|V^Tg|)
     """
-    _update_ = False
 
     def __init__(self, dim, data = None, ker_cov = None):
         self.dim = dim
@@ -103,27 +114,19 @@ class SCMS:
         self.xp = self.cosTheta = None
 
     def covariance_inverse(self, x):
-        if self._update_:
-            self.kde.estimate(x)
-            x = kde.mean_shift(x)
-            self.m = x
-
-        self.kde.estimate(x)
-        self.kde.gradient(x)
-        self.kde.hessian(x)
-        self.IS = (
-            np.outer(self.kde.g, self.kde.g) / self.kde.p - self.kde.H
-            ) / self.kde.p
+        p = self.kde.estimate(x)
+        g = self.kde.gradient(x)
+        h = self.kde.hessian(x)
+        self.IS = (np.outer(g, g / p) - h) / p
         return self.IS
 
     def normal_vectors(self):
         eigsys = np.linalg.eigh(self.IS)
-        self.V = np.transpose(eigsys[1][:-self.dim])
+        self.V = np.transpose(eigsys[1][self.dim:])
         return self.V
 
     def project(self, x):
-        if not self._update_:
-            self.m = self.kde.mean_shift(x)
-        # else self.m has been computed in covariance_inverse
-        self.xp = np.dot(self.V, np.dot(self.V.transpose(), self.m))
+        self.kde.estimate(x)
+        self.m = self.kde.mean_shift(x)
+        self.xp = x + np.dot(self.V, np.dot(self.V.transpose(), self.m))
         return self.xp
