@@ -20,6 +20,8 @@ def parse():
             help = 'field to be fitted', required = True)
     parser.add_argument('-i', default = 'fixed',
             help = 'not fitted if matched')
+    parser.add_argument('-s', default = 'setting',
+            help = 'regard as fit settings if matched')
 
     return parser.parse_args()
 
@@ -54,6 +56,12 @@ if __name__=="__main__":
                         to_be_fitted = True
 
         elif re.match("\s+$", line):
+            if args.o:
+               print(line, end = '', file = fp_out)
+        elif re.match(".+" + args.s, line):
+            if args.o:
+               print(line, end = '', file = fp_out)
+        elif re.match("PLM", line):
             if args.o:
                print(line, end = '', file = fp_out)
         else:
