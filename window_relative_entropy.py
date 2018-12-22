@@ -70,11 +70,11 @@ if __name__ == '__main__':
                       args.cv_names, args.cv_columns, args.widths, args.ratio, \
                       args.nblocks) , shell = True)
        except subprocess.CalledProcessError as e:
-           print(e); fp_re.close(); exit()
+           print(e); continue;
        result = result.split(b'\n')
        max_re0 = max_re1 = 0.0
        max_block0 = max_block1 = 0
-       watershed = int(args.nblocks) / 2
+       watershed = int(int(args.nblocks) / 2)
        for line in result:
            if re.match(b'#', line): continue
            if line == b'': continue

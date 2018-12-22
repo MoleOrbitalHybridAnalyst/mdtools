@@ -10,6 +10,8 @@ def parse():
             help='do not print header', action='store_true')
     parser.add_argument('-r', '--regex', 
             help='match the columns using regex', action='store_true')
+    parser.add_argument('-t', '--time',
+            help='start_time,time_interval')
     return parser.parse_args()
 
 def main():
@@ -48,6 +50,7 @@ def main():
         try: 
             if not len(result_f): 
                 raise KeyError("no matching fields with " + args.fields)
+            times = df.time
             df = df[result_f]
         except KeyError as kerr:
             print(kerr, file=sys.stderr)
@@ -57,7 +60,25 @@ def main():
         # print df
         try:
             if not args.noheader: df.print_header()
-            df.print_colvar()
+            if args.time is None: df.print_colvar()
+            else:
+                # print cvs at specific times
+                min_time, timestep = \
+                    np.vectorize(float)(args.time.split(','))
+                max_time = max(times)
+                timestep_ = times[1] - times[0]
+                length = int(round( (max_time - min_time) / timestep )) + 1
+                #print(min_time, max_time, timestep, length, len(result_f))
+                ts = np.ones(len(result_f) * length) * np.inf
+                ts = ts.reshape(length, -1)
+                for time, row in zip(times, df.values):
+                    indx = int(round( (time - min_time) / timestep ))
+                    if abs(indx * timestep + min_time - time) < 0.5 * timestep_:
+                        for col, cv in enumerate(row): 
+                            ts[indx][col] = cv
+                for row in ts:
+                    [print(" %8f"%cv, end='') for cv in row]
+                    print("")
         except BrokenPipeError:
             pass
 

@@ -51,7 +51,7 @@ if __name__=="__main__":
     if np.min(free[:,0])<0:
         print("ERROR: smallest r is",np.min(free[:,0]),"< 0")
         exit()
-    if np.max(free[:,0])<args.r_bulk:
+    if np.max(free[:,0])<r_bulk:
         print("ERROR: maximum r is",np.max(free[:,0]),"> r_bulk")
         exit()
 

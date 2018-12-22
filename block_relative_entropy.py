@@ -70,7 +70,7 @@ if __name__=="__main__":
     if args.file_format == 'colvar':
         print("# info: read " + args.input + " as colvar")
         if args.cv_name is None:
-            print('cv_name is required', file = stderr); exit()
+            print('cv_name is required', file = stderr); exit(1)
         print("# info: read field " + args.cv_name)
         from read_colvar import read_colvar
         time_series = read_colvar(args.input)[args.cv_name].values
@@ -79,10 +79,10 @@ if __name__=="__main__":
         try:
             col = int(args.cv_column)
         except:
-            print('cv_column is required', file = stderr); exit()
+            print('cv_column is required', file = stderr); exit(1)
         time_series = np.loadtxt(args.input)[:, col]
     else:
-        print('unkown file_format', file = stderr); exit()
+        print('unkown file_format', file = stderr); exit(1)
 
     ndata = len(time_series)
     print("# info: total number of data points read:", ndata)
@@ -90,13 +90,13 @@ if __name__=="__main__":
     try:
         ratio = float(args.ratio)
     except:
-        print('ratio should be a float', file = stderr); exit()
+        print('ratio should be a float', file = stderr); exit(1)
     if ratio <= 0.0:
-        print('ratio should be positive', file = stderr); exit()
+        print('ratio should be positive', file = stderr); exit(1)
 
     width = float(args.width)
     if width <= 0.0:
-        print('width should be positive', file = stderr); exit()
+        print('width should be positive', file = stderr); exit(1)
 
     full_histo, full_min_max = make_histo(time_series, width, ratio)
     if debug:
@@ -106,9 +106,12 @@ if __name__=="__main__":
     try:
         nblocks = int(args.nblocks)
     except:
-        print('nblocks should be an int', file = stderr); exit()
+        print('nblocks should be an int', file = stderr); exit(1)
     if nblocks <= 0:
-        print('nblocks should be positive', file = stderr); exit()
+        print('nblocks should be positive', file = stderr); exit(1)
+
+    if ndata < nblocks * 10:
+        print("too few data points", file = stderr); exit(1)
 
     block_size = int(ndata / nblocks)
     print("# info: number of data points in each block:", block_size)

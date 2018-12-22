@@ -84,6 +84,34 @@ proc draw_path_w_cen {mol cen path_offset_file {color orange} {radius 0.2} {reso
    }
 }
 
+proc within_path_w_cen {mol cen path_offset_file distance} {
+   set fp [open $path_offset_file r]
+   set path_offset_filedat [read $fp]
+   close $fp
+   #puts "read $path_offset_file"
+   set dist2 [expr $distance * $distance]
+   set path_offset_dat [split $path_offset_filedat "\n"]
+   set sel [atomselect 0 "name nonexist"]
+   foreach line $path_offset_dat {
+      if {[expr {$line eq ""}]} {
+         continue
+      }
+      set splits [split $line]
+      set offset [list [lindex $splits 0] [lindex $splits 1] [lindex $splits 2]]
+      set path_pos [vecadd $cen $offset]
+      set x0 [lindex $path_pos 0]
+      set y0 [lindex $path_pos 1]
+      set z0 [lindex $path_pos 2]
+      #puts "path postion: $x0 $y0 $z0"
+      if {[$sel list] == ""} {
+         set sel [atomselect 0 "(x-$x0)^2+(y-$y0)^2+(z-$z0)^2<=$dist2"]
+      } else {
+         set sel [atomselect 0 "index [$sel list] or (x-$x0)^2+(y-$y0)^2+(z-$z0)^2<=$dist2"]
+      }
+   }
+   return [$sel list]
+}
+
 # http://www.ks.uiuc.edu/Training/Tutorials/vmd-imgmv/imgmv/tutorial-html/node3.html
 proc enable_trace_path {} {
    global vmd_frame
@@ -98,8 +126,23 @@ proc disable_trace_path {} {
 proc draw_path_counter { name element op } {
    global vmd_frame
    global path_dat
+   global path_color
+   global path_radius
+   global path_resolution
+   if {[expr "! [info exists path_color]"]} {
+      set path_color orange
+   }
+   if {[expr "! [info exists path_radius]"]} {
+      set path_radius 0.5
+   }
+   if {[expr "! [info exists path_resolution]"]} {
+      set path_resolution 10
+   }
+#   puts $path_color
+#   puts $path_radius
+#   puts $path_resolution
    graphics 0 delete all
-   graphics 0 color orange
+   graphics 0 color $path_color
    set linecount 0
    foreach line $path_dat {
       if {[expr {$line eq ""}]} {
@@ -107,7 +150,7 @@ proc draw_path_counter { name element op } {
       }
       if {$linecount eq $vmd_frame(0)} {
          set splits [split $line]
-         graphics 0 sphere [list [lindex $splits 0] [lindex $splits 1] [lindex $splits 2]] radius 0.5 resolution 10
+         graphics 0 sphere [list [lindex $splits 0] [lindex $splits 1] [lindex $splits 2]] radius $path_radius resolution $path_resolution
          break
       }
       incr linecount

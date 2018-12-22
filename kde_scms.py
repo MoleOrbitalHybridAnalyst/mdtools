@@ -130,3 +130,14 @@ class SCMS:
         self.m = self.kde.mean_shift(x)
         self.xp = x + np.dot(self.V, np.dot(self.V.transpose(), self.m))
         return self.xp
+
+    def project2converge(self, x, epsilon = 0.0001):
+        self.xp = x
+        dev = 1.0
+        while dev > epsilon:
+            prev_xp = self.xp
+            self.covariance_inverse(self.xp)
+            self.normal_vectors()
+            self.xp = self.project(self.xp)
+            dev = sum((prev_xp - self.xp)**2)
+        return self.xp

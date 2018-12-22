@@ -10,8 +10,9 @@
 #Q:How to change the orders of bond, angle, dihedral,improper in data file so that they are consistent with the evb.par?
 #A:generate evb.top by genevbtop.pl first then read it to know what the indexes of  atoms involved in evb(kernel number!=0 and not water, hydronium) and read evb.cfg to now the kernel name. assume the evb.top and evb.par has the same atom order, then we also know what the types of these atoms from evb.par(determined by the third column in evb.top). (data structure: a global hash mapping from evb atom indexes to the kernel number , a hash from indexes to  the types, these two hashes may not be too long because evb molecules in a system is not too many).then loop for all the bonds, when the indexes involved are those evb atoms(check the existency in either the two hashes), look into the  molecule section about that molecule(call construct_atoms_etc_from_string to update the @bonds).loop in @bonds to check which bond is actually involved(do regex twice),get the order of the bond in evb.par(which of the two terminals is larger), if the order in data is the same do nothing, otherwise inverse. loop for angles,dih,impro.
 # Notes:
-# in molecule template section of evb.type, the order of atoms of a bond/angle/... should be consistent with its type_name
-# eg. 1 2 3 4 DIH_NH1_H_CT1_HB1 instead 4 3 2 1 DIH_HB1_CT1_H_NH1
+# (1) in molecule template section of evb.type, the order of atoms of a bond/angle/... should be consistent with its type_name
+#     eg. 1 2 3 4 DIH_NH1_H_CT1_HB1 instead 4 3 2 1 DIH_HB1_CT1_H_NH1
+# (2) if CT1 is a kernel atom, then every bond/dihedral/... that is owned by CT1 and not specified in evb.par should be inversed
 use File::Basename;
 use warnings;
 $debug=1;$glu_flag=1;$asp_flag=1;

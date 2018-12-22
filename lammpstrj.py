@@ -496,7 +496,7 @@ class dump:
   # --------------------------------------------------------------------
   # write a single dump file from current selection
 
-  def write(self,file,header=1,append=0):
+  def write(self,file,header=1,append=0,fmt=None):
     if len(self.snaps): 
         namestr = self.names2str()
     if not append: 
@@ -541,7 +541,10 @@ class dump:
           if j == id or j == type:
             line += str(int(atoms[i][j])) + " "
           else:
-            line += str(atoms[i][j]) + " "
+            if fmt is None:
+              line += str(atoms[i][j]) + " "
+            else:
+              line += fmt%(atoms[i][j]) + " "
         print(line, file=f)
     f.close()
     print("\n%d snapshots" % self.nselect)

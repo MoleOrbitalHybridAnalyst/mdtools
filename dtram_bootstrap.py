@@ -159,7 +159,8 @@ class MyDtram:
         ts = np.ones(length) * np.inf;
         for time, cv in zip(df.time, df[self.args.cvname]):
             indx = int(round( (time - min_time) / timestep ))
-            ts[indx] = cv
+            if abs(indx * timestep + min_time - time) < 0.5 * timestep:
+                ts[indx] = cv
 
         where_is_missing = np.where(ts == np.inf)[0]
         where_is_present = np.where(ts != np.inf)[0]
@@ -202,7 +203,35 @@ class MyDtram:
                     maxiter = self.maxiter, maxerr = self.maxerr).f_full_state
                 ]
         elif self.args.job_type == 'bootstrap':
-            pass
+            if itask >= len(self.lags) * self.boot_nres: return None
+            iresample = itask % self.boot_nres
+            ilag = int(itask / self.boot_nres)
+            chunksize = self.lags[ilag] * self.boot_chunksize
+            # ichunks[ilag][ithermo][iresample] = [ichunk1, ... , ichunk_nchunk]
+            ttrajs = []; dtrajs = []
+            for ichunks__, tt, dt in \
+                    zip(self.ichunks[ilag], self.ttrajs, self.dtrajs):
+                for ichunk in ichunks__[iresample]:
+                    i1 = ichunk * chunksize
+                    i2 = min((ichunk + 1) * chunksize, len(tt) - 1)
+                    ttrajs.append(tt[i1:i2]); dtrajs.append(dt[i1:i2])
+#            return [
+#                self.lags[ilag],
+#                float(self.args.temperature) * float(self.args.kb) * 
+#                dtram(
+#                    ttrajs, dtrajs, self.bias, 
+#                    self.lags[ilag], init = 'wham', 
+#                    init_maxiter = self.maxiter, init_maxerr = self.maxerr,
+#                    maxiter = self.maxiter, maxerr = self.maxerr).f_full_state
+#                ]
+            return [
+                    self.lags[ilag], iresample,
+                dtram(
+                    ttrajs, dtrajs, self.bias, 
+                    self.lags[ilag], init = 'wham', 
+                    init_maxiter = self.maxiter, init_maxerr = self.maxerr,
+                    maxiter = self.maxiter, maxerr = self.maxerr)
+                    ]
         elif re.match('block[0-9]+$', self.args.job_type):
             if itask >= len(self.lags) * self.nblocks: return None
             iblock = itask % self.nblocks
@@ -236,6 +265,20 @@ class MyDtram:
             ntasks = len(self.lags)
         elif self.args.job_type == 'bootstrap':
             ntasks = len(self.lags) * self.boot_nres
+            # prepare the random samples
+            # ichunks[ilag][ithermo][iresample] = [ichunk1, ... , ichunk_nchunk]
+            self.ichunks = []
+            for lag in self.lags:
+                chunksize = self.boot_chunksize * lag
+                nchunks = [int(len(t)/chunksize) for t in self.ttrajs]
+                ichunks_ = []
+                # loop for thermos
+                for nchunk in nchunks:
+                    ichunks__ = \
+                        np.random.random_sample([self.boot_nres, nchunk])
+                    ichunks__ = np.vectorize(int)(ichunks__ * nchunk)
+                    ichunks_.append(ichunks__)
+                self.ichunks.append(ichunks_)
         elif re.match('block[0-9]+$', self.args.job_type):
             self.nblocks = int(self.args.job_type[5:])
             ntasks = len(self.lags) * self.nblocks
@@ -291,4 +334,6 @@ if __name__=="__main__":
 
     parser = MyParser()
     mydtram = MyDtram(parser.args)
-    mydtram.run(maxiter=500)
+    mydtram.run(maxiter=50)
+    mydtram.save()
+

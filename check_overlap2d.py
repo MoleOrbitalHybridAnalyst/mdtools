@@ -48,6 +48,9 @@ if __name__=="__main__":
             try:
                 #data = np.loadtxt(line.rstrip()+"/"+args.filename, usecols = [c1,c2])
                 data = read_colvar(line.rstrip()+"/"+args.filename).values[:, [c1, c2]]
+                if len(data) <= 1:
+                    print("WARNING: colvar looks strange in", line, end = '')
+                    continue
                 cv1 = data[:, 0]
                 cv2 = data[:, 1]
                 if check_time:
