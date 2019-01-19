@@ -13,12 +13,18 @@ for ifile,filename in enumerate(argv[1:]):
     pmf = []
     cv = []
     with open(filename, "r") as fp:
+        linecount = 0
         for line in fp:
             if re.match("#", line)!=None:
                 continue
             splits = line.split()
-            cv.append(float(splits[0]))
-            pmf.append(float(splits[1]))
+            if len(splits) > 1:
+                cv.append(float(splits[0]))
+                pmf.append(float(splits[1]))
+            else:
+                cv.append(linecount)
+                pmf.append(float(splits[0]))
+            linecount += 1
     cvs.append(np.array(cv))
     pmfs.append(np.array(pmf))
     ndatas.append(len(pmf))
