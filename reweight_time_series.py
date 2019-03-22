@@ -56,9 +56,45 @@ if __name__ == '__main__':
     if len(histo_info) != 3:
         print('incomplete histo info')
         exit(1)
+    try:
+        histo_min = float(histo_info[0])
+        histo_max = float(histo_info[1])
+        nbins = int(histo_info[2])
+    except Exception as e:
+        print('while parsing histo info, ', end = '', file = stderr)
+        print(e, file = stderr)
+        exit(1)
 
     # check things
+    if histo_min >= histo_max:
+        print('histo_min should be smaller than histo_max')
+        exit(1)
     if len(cv_ts) != len(rf):
         print('length of cv time series (%d) !='%len(cv_ts),
               'length of reweighting factor (%d)'%len(rf))
         exit(1)
+
+    # do histogram using rf
+    counts = np.zeros(nbins)
+    npoint = 0
+    for cv, w in zip(cv_ts, rf):
+        ibin = int((cv - histo_min) / (histo_max - histo_min) * nbins)
+        if ibin >= 0 and ibin < nbins:
+            counts[ibin] += w
+            npoint += 1
+    if sum(counts) == 0:
+        print('no points lie in histo', file = stderr)
+        exit(1)
+    counts /= sum(counts) 
+    counts = np.vectorize(round)(counts * npoint)
+    counts = np.vectorize(int)(counts)
+    if npoint != sum(counts):
+        diff = npoint - sum(counts)
+        print('WARNING: %d point(s) missing,'%diff,
+              'estimated error = %f%%'%(100 * diff / npoint),
+                file = stderr)
+        maxpos = np.argmax(counts)
+        counts[maxpos] += diff
+        if counts[maxpos] <= 0 or np.argmax(counts) != maxpos:
+            print('too much difference between two ensembles', file = stderr)
+            exit(1)
