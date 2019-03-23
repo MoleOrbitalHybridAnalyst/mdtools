@@ -98,3 +98,15 @@ if __name__ == '__main__':
         if counts[maxpos] <= 0 or np.argmax(counts) != maxpos:
             print('too much difference between two ensembles', file = stderr)
             exit(1)
+
+    # generate fake time series
+    df = pd.DataFrame()
+    edges = np.linspace(histo_min, histo_max, nbins + 1)
+    centers = (edges[1:] + edges[:-1]) / 2
+    assert len(centers) == len(counts)
+    ts = []
+    for n, c in zip(counts, centers):
+        ts.extend(np.ones(n) * c)
+    df['time'] = np.arange(sum(counts))
+    df[args.cv_name] = ts
+    df.to_colvar(args.output_colvar)
