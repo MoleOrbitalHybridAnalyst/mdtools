@@ -11,4 +11,4 @@ args = parser.parse_args()
 
 df = read_colvar(args.colvar)
 exec("mask = (" + args.c%"df[args.f]" + ")")
-df[mask].to_colvar(args.colvar)
+df[mask].to_colvar(args.colvar, dtype = str)

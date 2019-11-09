@@ -12,7 +12,7 @@ while(<IN>) {
    $_=$F[0];
    push @targets, $F[1];
    push @kappas, $F[2];
-   /(m.[0-9]+)/;
+   /\/([m0-9\-\._]+)\/(COLVAR|tail_colvar)/;
    my $dir_name = $1;
    push @dir_names, $dir_name;
    system "mkdir $dir_name";

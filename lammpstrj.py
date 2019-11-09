@@ -1146,3 +1146,46 @@ class aselect:
         if not flag:
           snap.aselect[i] = 0
           snap.nselect -= 1
+
+class Box:
+    """ class of simulation box """
+
+    def __init__(self, snap):
+        self.xhi = snap.xhi
+        self.xlo = snap.xlo
+        self.yhi = snap.yhi
+        self.ylo = snap.ylo
+        self.zhi = snap.zhi
+        self.zlo = snap.zlo
+        self.sizes = np.zeros(3)
+        self.sizes[0] = self.xhi - self.xlo
+        self.sizes[1] = self.yhi - self.ylo
+        self.sizes[2] = self.zhi - self.zlo
+
+class Pbc:
+    """ class of periodic boundary condition """
+
+    def __init__(self, snap):
+        self.box = Box(snap)
+
+    def shrink(self, x):
+        """ shrink a vector to be within half box lengths """
+        n = (x + 0.5 * self.box.sizes) // self.box.sizes
+        return x - n * self.box.sizes
+
+    def delta(self, x1, x2):
+        """ compute a vector connecting from x1 to x2 with pbc respected """
+        return self.shrink(x2 - x1)
+
+    def distance2(self, x1, x2):
+        """ compute the pbc distance square between x1 and x2 """
+        return np.sum(self.delta(x1, x2)**2)
+
+    def distance(self, x1, x2):
+        """ compute the pbc distance between x1 and x2 """
+        return np.sqrt(self.distance2(x1, x2))
+
+    def unwrap(self, x, x_ref):
+        """ unwrap x so that it is within half box lengths of x_ref """
+        return x_ref + self.delta(x_ref, x)
+

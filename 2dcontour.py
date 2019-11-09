@@ -27,10 +27,10 @@ mask = data[:,2] > zmax
 data[:,2][mask] = zmax
 
 plt.rcParams["figure.figsize"] = (24,18)
-plt.rcParams["font.size"] = 55
-plt.rcParams["font.family"] = "arial"
-plt.rcParams["axes.labelsize"] = 55
-xlabel = "CEC Position"
+plt.rcParams["font.size"] = 85
+#plt.rcParams["font.family"] = "arial"
+plt.rcParams["axes.labelsize"] = 85
+xlabel = r"CEC Position ($\mathrm{\AA}$)"
 ylabel = "Water Wire Connectivity"
 
 xmin = min(data[:,0])
@@ -72,5 +72,10 @@ ax.clabel(CL, fontsize=30, inline=1, fmt="%d", colors = 'k')
 ##DP = ax3d.plot_surface(data[:,0],data[:,1],data[:,2],cmap=plt.cm.get_cmap('plasma'),rstride=1,cstride=1,linewidth=1)
 #cbar = fig.colorbar(DP)
 #cbar.ax.set_ylabel('Potential of Mean Force (kcal/mol)')
+try:
+    path = np.loadtxt("path.dat")
+    ax.plot(path[:,0], path[:,1], color = 'k', linewidth = 4.5)
+except:
+    print("no path found, skipped")
 plt.show()
-#plt.savefig("pmf.png")
+#plt.savefig("pmf.png", bbox_inches = 'tight')

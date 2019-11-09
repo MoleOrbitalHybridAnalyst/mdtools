@@ -78,6 +78,10 @@ if __name__=="__main__":
                 continue
             min1 = min(cv1); max1 = max(cv1)
             min2 = min(cv2); max2 = max(cv2)
+            mask = ~np.isnan(cv1)
+            mask = (~np.isnan(cv2)) & mask
+            cv1 = cv1[mask]
+            cv2 = cv2[mask]
 #            n1 = int(round((max1 - min1) / w1))
 #            n2 = int(round((max2 - min2) / w2))
 #            print("min1 = %f max1 = %f min2 = %f max2 = %f"%(min1,max1,min2,max2))
@@ -111,7 +115,7 @@ if __name__=="__main__":
             cp = plt.contour(x, y, histo,
                     [drawline],colors=[cmap(idir), 'b'],
                     alpha = 0.8)
-            plt.text(np.mean(x), np.mean(y), line.rstrip(), 
+            plt.text(np.mean(cv1), np.mean(cv2), line.rstrip(), 
                     color = cmap(idir),
                     horizontalalignment = 'center', 
                     verticalalignment = 'center')

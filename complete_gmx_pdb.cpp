@@ -21,10 +21,11 @@ int main(int argc, char **argv)
    PDBDef def_pot("/home/chhli/share/pot.def");
    PDBDef def_cla("/home/chhli/share/cla.def");
    PDBDef def_sod("/home/chhli/share/sod.def");
+   PDBDef def_po4("/home/chhli/share/po4.def");
    string chainid_protein = "P", chainid_lipid = "O";
    string chainid_ion = "O", chainid_water = "W";
 
-   //do the protein
+   //do the protein and ligand
    vector<size_t> indexes = pdb.selectAtoms(def_protein);
    pdb.setChainid(def_protein, chainid_protein);
    int pre_resid = -1; int number = 1;
@@ -33,6 +34,7 @@ int main(int argc, char **argv)
       pre_resid = pdb.getResid(index);
       pdb.setSegname(index, chainid_protein + to_string(number));
    }
+   indexes = pdb.selectAtoms(def_po4); 
 
    //do the lipid
    pdb.setChainid(def_lipid, chainid_lipid);
@@ -65,6 +67,14 @@ int main(int argc, char **argv)
          pdb.setSegname(index, chainid_ion + to_string(number));
          pdb.setChainid(index, chainid_ion);
          pdb.setResid(index, resid++);
+      }
+      number++;
+   }
+   indexes = pdb.selectAtoms(def_po4);
+   if(!indexes.empty()) {
+      for(auto index : indexes) {
+         pdb.setSegname(index, chainid_ion + to_string(number));
+         pdb.setChainid(index, chainid_ion);
       }
       number++;
    }
