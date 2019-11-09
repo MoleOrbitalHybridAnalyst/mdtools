@@ -1,6 +1,11 @@
 #!/usr/bin/env python2
 from __future__ import print_function
-from pypdb import *
+try:
+    from pypdb import *
+except:
+    from sys import path
+    path.insert(0, "/home/chhli/packages/libpdb")
+    from pypdb import *
 import argparse
 
 def parse():
@@ -15,6 +20,7 @@ if __name__=="__main__":
     dist2 = float(args.l) ** 2
 
     defo = pdb_def("chainid W and atomtype O")
+    #defo = pdb_def("chainid W and resname SPCF TIP3 and atomname OH2 O")
     selo = pdb.select_atoms(defo)
     if len(selo) == 0: raise Exception("no water in the input pdb")
     for index in selo:
@@ -23,6 +29,7 @@ if __name__=="__main__":
             print(index + 1,end=' ')
 
     defhyd = pdb_def("chainid W and atomtype O and resname H3O")
+    #defhyd = pdb_def("chainid W and resname H3O and atomname OH2 O")
     selhyd = pdb.select_atoms(defhyd)
     if len(selhyd) == 0: raise Exception("no hydronium in the pdb")
     elif len(selhyd) != 1: raise Exception("more than 1 hydronium in the pdb")
