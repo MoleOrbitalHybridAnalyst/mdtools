@@ -195,6 +195,40 @@ proc draw_text_counter { name element op } {
    }
 }
 
+# this only supports one atom
+proc enable_trace_arrows {} {
+   global vmd_frame
+   trace variable vmd_frame(0) w draw_arrow_counter
+}
+
+proc disable_trace_arrows {} {
+   global vmd_frame
+   trace vdelete vmd_frame(0) w draw_arrow_counter
+}
+
+proc draw_arrow_counter { name element op } {
+   global vmd_frame
+   global arrow_dat
+   graphics 0 delete all
+   set linecount 0
+   foreach line $arrow_dat {
+      if {[expr {$line eq ""}]} {
+         continue
+      }
+      if {$linecount eq $vmd_frame(0)} {
+         set splits [split $line]
+         set start [lindex [[atomselect 0 "serial [lindex $splits 0]"] get {x y z}] 0]
+         set v [lindex $splits 1]
+         lappend v [lindex $splits 2]
+         lappend v [lindex $splits 3]
+         set end [vecadd $start $v]
+         draw_arrow 0 $start $end red 0.1 0.15
+         break
+      }
+      incr linecount
+   }
+}
+
 proc draw_texts {mol text_file {size 1.4} {thickness 2.8}} {
    set fp [open $text_file r]
    set text_filedat [read $fp]
@@ -237,10 +271,11 @@ proc draw_texts_u_serials {mol text_file {size 1.4} {thickness 2.8}} {
    }
 }
 
-proc draw_arrows_u_serials {mol arrow_file {color red} {radius1 0.1} {radius2 0.15}} {
+proc draw_arrows_u_serials {mol arrow_file {color red} {radius1 0.1} {radius2 0.15} {scale 1.0}} {
    set fp [open $arrow_file r]
    set arrow_filedat [read $fp]
    close $fp
+   global arrow_dat
    set arrow_dat [split $arrow_filedat "\n"]
    foreach line $arrow_dat {
       if {[expr {$line eq ""}]} {
@@ -248,9 +283,9 @@ proc draw_arrows_u_serials {mol arrow_file {color red} {radius1 0.1} {radius2 0.
       }
       set splits [split $line]
       set start [lindex [[atomselect $mol "serial [lindex $splits 0]"] get {x y z}] 0]
-      set v [lindex $splits 1]
-      lappend v [lindex $splits 2]
-      lappend v [lindex $splits 3]
+      set v [expr [lindex $splits 1] * $scale]
+      lappend v [expr [lindex $splits 2] * $scale] 
+      lappend v [expr [lindex $splits 3] * $scale]
       set end [vecadd $start $v]
       draw_arrow $mol $start $end $color $radius1 $radius2
    }
@@ -260,6 +295,7 @@ proc draw_arrows_u_coords {mol arrow_file {color red} {radius1 0.1} {radius2 0.1
    set fp [open $arrow_file r]
    set arrow_filedat [read $fp]
    close $fp
+   global arrow_dat
    set arrow_dat [split $arrow_filedat "\n"]
    foreach line $arrow_dat {
       if {[expr {$line eq ""}]} {
@@ -274,6 +310,35 @@ proc draw_arrows_u_coords {mol arrow_file {color red} {radius1 0.1} {radius2 0.1
       lappend v [lindex $splits 5]
       set end [vecadd $start $v]
       draw_arrow $mol $start $end $color $radius1 $radius2
+   }
+}
+
+proc draw_nm {mol nm_file index {scaled 1} {color red} {radius1 0.1} {radius2 0.15}} {
+   set fp [open $nm_file r]
+   set nm_filedat [read $fp]
+   close $fp
+   global nm_dat
+   set nm_dat [split $nm_filedat "\n"]
+   set line_index -1
+   foreach line $nm_dat {
+      incr line_index
+      if {$line_index ne $index} {
+         continue
+      }
+      if {[expr {$line eq ""}]} {
+         continue
+      }
+      set splits [split $line]
+      set natoms [molinfo $mol get numatoms]
+      for {set iatom 0} {$iatom < $natoms} {incr iatom} {
+         set start [lindex [[atomselect $mol "index $iatom"] get {x y z}] 0]
+         set offset [expr $iatom * 3]
+         set v [expr [lindex $splits $offset] * $scaled]
+         lappend v [expr [lindex $splits [expr $offset + 1]] * $scaled]
+         lappend v [expr [lindex $splits [expr $offset + 2]] * $scaled]
+         set end [vecadd $start $v]
+         draw_arrow $mol $start $end $color $radius1 $radius2
+      }
    }
 }
 
