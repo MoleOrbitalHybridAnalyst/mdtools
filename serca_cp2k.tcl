@@ -32,3 +32,16 @@ rotate x by 52.1348
 rotate z by 22.42915942
 rotate x by 90
 # 899 961 962 963 966 967
+
+set cen [atomselect 0 "name CA and protein and resid 794 798 799 905 908 909 940 944"]
+set nf [molinfo 0 get numframes]
+
+proc draw_box_ {} {
+   global cen
+   draw_box 0 [geo_center $cen] {0.92435199 -0.38154081 0} {0.234192 0.567373 -0.789457} {0.30121 0.729736 0.6138062} -6.5 2 -6 2.5 -6.5 6.5
+}
+
+proc draw_path_ {{path /project/gavoth/chhli/serca/1_rmd_1d/rmd_scripts_e908_dry/path_every_1.5A_initial.dat}} {
+   global cen
+   draw_path_w_cen 0 [geo_center $cen] $path
+}

@@ -85,8 +85,9 @@ if __name__ == '__main__':
     if sum(counts) == 0:
         print('no points lie in histo', file = stderr)
         exit(1)
-    counts /= sum(counts) 
-    counts = np.vectorize(round)(counts * npoint)
+    raw_counts = counts.copy()
+    counts = counts * npoint / sum(counts) 
+    counts = np.vectorize(round)(counts)
     counts = np.vectorize(int)(counts)
     if npoint != sum(counts):
         diff = npoint - sum(counts)
