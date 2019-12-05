@@ -13,7 +13,7 @@ mol selupdate 2 0 1
 mol modmaterial 1 0 Transparent
 
 mol addrep 0
-mol modselect 3 0 protein and resid 37 304 411 130 26 30 33
+mol modselect 3 0 protein and resid 37 304 411 130 26 29 30 33
 mol modstyle 3 0 Licorice
 
 rotate x by -90
