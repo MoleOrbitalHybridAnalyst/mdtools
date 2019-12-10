@@ -19,7 +19,7 @@ mol modstyle 3 0 Licorice
 mol addrep 0
 mol modselect 4 0 protein and resid 44 311 418 137 33 36 37 40
 mol modstyle 4 0 Licorice
-mol showrep 4 0 off
+mol showrep 0 4 off
 
 rotate x by -90
 rotate y by 60
