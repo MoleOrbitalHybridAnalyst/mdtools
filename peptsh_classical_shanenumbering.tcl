@@ -7,7 +7,7 @@ mol modstyle 1 0 NewCartoon
 mol modmaterial 1 0 Transparent
 
 mol addrep 0
-mol modselect 2 0 name OW OH2 and z > 28 and z < 65 and within 5 of protein
+mol modselect 2 0 name OW OH2 SOD CLA NA CL and z > 28 and z < 65 and within 5 of protein
 mol modstyle 2 0 VDW
 mol selupdate 2 0 1
 mol modmaterial 1 0 Transparent
