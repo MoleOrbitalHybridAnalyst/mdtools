@@ -19,6 +19,20 @@ proc pbcwithin {serial range bx by bz} {
    return [$s list]
 }
 
+# use index for avoiding confusion
+proc pbcwithinnew {index range bx by bz} {
+   lassign [lindex [[atomselect 0 "index $index"] get {x y z}] 0] a b c
+   set s [atomselect 0 "within $range of index $index"]
+   set r2 [expr $range * $range]
+   set s [atomselect 0 "index [$s list] or (x-$a-$bx)^2+(y-$b)^2+(z-$c)^2<=$r2"]
+   set s [atomselect 0 "index [$s list] or (x-$a+$bx)^2+(y-$b)^2+(z-$c)^2<=$r2"]
+   set s [atomselect 0 "index [$s list] or (x-$a)^2+(y-$b+$by)^2+(z-$c)^2<=$r2"]
+   set s [atomselect 0 "index [$s list] or (x-$a)^2+(y-$b-$by)^2+(z-$c)^2<=$r2"]
+   set s [atomselect 0 "index [$s list] or (x-$a)^2+(y-$b)^2+(z-$c+$bz)^2<=$r2"]
+   set s [atomselect 0 "index [$s list] or (x-$a)^2+(y-$b)^2+(z-$c-$bz)^2<=$r2"]
+   return [$s list]
+}
+
 proc draw_box {mol center vx vy vz xl xh yl yh zl zh {color blue} {width 1}} {
    set dlll [vecadd [vecscale $xl $vx] [vecadd [vecscale $yl $vy] [vecadd [vecscale $zl $vz] $center]]]
    set dhll [vecadd [vecscale $xh $vx] [vecadd [vecscale $yl $vy] [vecadd [vecscale $zl $vz] $center]]]
@@ -289,6 +303,15 @@ proc draw_arrows_u_serials {mol arrow_file {color red} {radius1 0.1} {radius2 0.
       set end [vecadd $start $v]
       draw_arrow $mol $start $end $color $radius1 $radius2
    }
+}
+
+proc draw_arrow_u_serial {mol serial x y z {color red} {radius1 0.1} {radius2 0.15} {scale 1.0}} {
+   set start [lindex [[atomselect $mol "serial $serial"] get {x y z}] 0]
+   set v [expr $x * $scale]
+   lappend v [expr $y * $scale] 
+   lappend v [expr $z * $scale]
+   set end [vecadd $start $v]
+   draw_arrow $mol $start $end $color $radius1 $radius2
 }
 
 proc draw_arrows_u_coords {mol arrow_file {color red} {radius1 0.1} {radius2 0.15}} {
