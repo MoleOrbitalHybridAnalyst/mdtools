@@ -11,7 +11,9 @@ def read_colvar(fname):
     if re.match("#!.+FIELDS", firstline) == None:
         raise RuntimeError('No header found in ' + fname)
     names_ = firstline.split()[2:]
-    return pd.read_csv(fname,delim_whitespace=True,names=names_, comment ='#' )
+    indexes_ = np.unique(names_, return_index=True)[1]
+    return pd.read_csv(fname,delim_whitespace=True,
+          names=[names_[_] for _ in sorted(indexes_)], comment ='#' )
 
 def print_columns(df, stream=sys.stdout):
     for i,c in enumerate(df.columns): print("%d: %s"%(i,c), file=stream)
