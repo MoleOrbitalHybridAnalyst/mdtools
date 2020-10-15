@@ -285,6 +285,7 @@ my $start_bond_coeffs_flag=0,$start_atoms_flag=0;
 my $start_bonds_flag=0;$start_angle_coeffs_flag=0;$start_angles_flag=0;
 my $start_dihedral_coeffs_flag=0;$start_dihedrals_flag=0;
 my $start_improper_coeffs_flag=0,$start_improers_flag=0;
+my $start_cmap_flag=0;
 for my $line_in_data (@all_the_lines_in_data)
 {
     #write to data and bond
@@ -323,6 +324,9 @@ for my $line_in_data (@all_the_lines_in_data)
     }
     elsif(/^Impropers/) {
         $start_improper_coeffs_flag=0;$start_improers_flag=1;
+    }
+    elsif(/^CMAP/) {
+        $start_improers_flag=0;$start_cmap_flag=1;
     }
     if($head_flag==1) {
         print DATA "$_\n";
@@ -749,9 +753,13 @@ for my $line_in_data (@all_the_lines_in_data)
                         }
                     }
                 }
+
         }
         #else not evb bonds, do nothing
         print DATA "$modified_line\n";
+    }
+    elsif ($start_cmap_flag==1) {
+        print DATA $_."\n";
     }
 }
 close DATA;

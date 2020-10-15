@@ -11,7 +11,8 @@
 use strict;
 use warnings;
 
-my $natom=0;my $nbond=0;my $nangle=0;my $ndihedral=0;my $nimproper=0;
+my $natom=0;my $nbond=0;my $nangle=0;my $ndihedral=0;my $nimproper=0; 
+my $ncrossterms=0;
 open CHECK, "<", $ARGV[0];
 open DATA2, ">", $ARGV[2];
 my $time=localtime;
@@ -37,6 +38,10 @@ for(<CHECK>) {
     elsif(/^\s+[0-9]+\s+impropers/) {
         $nimproper=(split ' ')[0];
         print DATA2 $_."\n";
+    }
+    elsif(/^\s+[0-9]+\s+crossterms/) {
+        $ncrossterms=(split ' ')[0];
+        print DATA2 $_."\n";
         last;
     }
 }
@@ -44,7 +49,7 @@ close CHECK;
 print DATA2 "\n";
 
 open DATA1, "<", $ARGV[1];
-my $headflag=0;my $Masses_flag=0; my $Pair_Coeffs_flag=0; my $Atoms_flag=0; my $Bond_Coeffs_flag=0; my $Bonds_flag=0; my $Angle_Coeffs_flag=0; my $Angles_flag=0; my $Dihedral_Coeffs_flag=0; my $Dihedrals_flag=0; my $Improper_Coeffs_flag=0; my $Impropers_flag=0;   
+my $headflag=0;my $Masses_flag=0; my $Pair_Coeffs_flag=0; my $Atoms_flag=0; my $Bond_Coeffs_flag=0; my $Bonds_flag=0; my $Angle_Coeffs_flag=0; my $Angles_flag=0; my $Dihedral_Coeffs_flag=0; my $Dihedrals_flag=0; my $Improper_Coeffs_flag=0; my $Impropers_flag=0; my $CMAP_flag=0;
 my $natomtypes=0;
 my $pair_coeffs_for_h="";
 my $type_for_h=0;
@@ -99,6 +104,10 @@ for(<DATA1>) {
     elsif(/^Impropers/) {
         $count=-1;
         $Impropers_flag=1; $Improper_Coeffs_flag=0;
+    }
+    elsif(/^CMAP/) {
+        $count=-1;
+        $CMAP_flag=1; $Impropers_flag=0;
     }
     if($headflag==1) {
         if(/^\s+[0-9]+\s+atom types/) {
@@ -179,7 +188,11 @@ for(<DATA1>) {
         $count++ unless /^\s*$/;
         next if $count>$nbond;
         print DATA2 $_."\n";
-        print DATA2 "\n" if $count==$nbond;
+        if($count==$nbond) {
+           print DATA2 "\n";
+           $count++;
+           next;
+        }
     }
     elsif($Angle_Coeffs_flag==1) {
         $count++ unless /^\s*$/;
@@ -189,7 +202,11 @@ for(<DATA1>) {
         $count++ unless /^\s*$/;
         next if $count>$nangle;
         print DATA2 $_."\n";
-        print DATA2 "\n" if $count==$nangle;
+        if($count==$nangle) {
+           print DATA2 "\n";
+           $count++;
+           next;
+        }
     }
     elsif($Dihedral_Coeffs_flag==1) {
         $count++ unless /^\s*$/;
@@ -199,7 +216,11 @@ for(<DATA1>) {
         $count++ unless /^\s*$/;
         next if $count>$ndihedral;
         print DATA2 $_."\n";
-        print DATA2 "\n" if $count==$ndihedral;
+        if($count==$ndihedral) {
+           print DATA2 "\n";
+           $count++;
+           next;
+        }
     }
     elsif($Improper_Coeffs_flag==1) {
         $count++ unless /^\s*$/;
@@ -209,7 +230,21 @@ for(<DATA1>) {
         $count++ unless /^\s*$/;
         next if $count>$nimproper;
         print DATA2 $_."\n";
-        print DATA2 "\n" if $count==$nimproper;
+        if($count==$nimproper) {
+           print DATA2 "\n";
+           $count++;
+           next;
+        }
+    }
+    elsif($CMAP_flag==1) {
+        $count++ unless /^\s*$/;
+        next if $count>$ncrossterms;
+        print DATA2 $_."\n";
+        if($count==$ncrossterms) {
+           print DATA2 "\n";
+           $count++;
+           next;
+        }
     }
 }
 close DATA1;
