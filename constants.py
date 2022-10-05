@@ -7,7 +7,7 @@ eV = 23.060541945
 # lenght in A
 m = 1e10
 A = 1
-Bohr = 0.529177249
+Bohr = 0.52917721092
 
 # time in ps
 s = 1e12
